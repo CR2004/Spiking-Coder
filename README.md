@@ -7,6 +7,8 @@
 Spiking-CODER is a research project that introduces **two large language models (LLMs) fine-tuned specifically for Spiking Neural Network (SNN) programming tasks**.  
 The base model that we fine-tuned on is Llama-3.1-3B-Base.
 
+This work was conducted under the NVM and Neuromorphic Hardware Research Group at IIT Delhi.
+
 The repository contains:
 - **`Fine-tuning/`** – Script for model fine-tuning  
 - **`data generation/`** – Data generation scripts for v1 and v2 models  
