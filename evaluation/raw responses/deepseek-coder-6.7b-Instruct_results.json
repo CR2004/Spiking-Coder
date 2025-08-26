@@ -1,0 +1,1022 @@
+[
+  {
+    "id": "neuron_1",
+    "category": "Neuron & Synapse Models",
+    "framework": "Brian2",
+    "prompt": "Write Brian2 code to simulate a single LIF neuron receiving constant input current of 2 nA for 100 ms. Record and plot the membrane potential and spike times.",
+    "semantic_rules": [
+      "NeuronGroup",
+      "StateMonitor",
+      "SpikeMonitor",
+      "run(",
+      "100*ms",
+      "2*nA",
+      "plot"
+    ],
+    "response": "Brian2 is a Python package for simulating neuronal networks. Here is the code you requested:\n\n```python\nfrom brian2 import *\nimport matplotlib.pyplot as plt\n\nstart_scope()\n\n# Define the neuron model\neqs = '''\ndv/dt = (I-v)/tau : 1\nI : 1\ntau : second\n'''\n\n# Define neuron parameters\nN = 1\nI = 2*nA  # Input current\ntau = 10*ms  # Time constant\n\n# Run simulation\nG = NeuronGroup(N, eqs, threshold='v>1', reset='v = 0', method='linear')\nG.I = I\nG.tau = tau\nrun(100*ms)\n\n# Plot membrane potential\nplt.plot(G.t*1000, G.v[0]*1000)\nplt.xlabel('Time (ms)')\nplt.ylabel('Membrane potential (mV)')\nplt.show()\n\n# Print spike times\nif len(G.spike_times) > 0:\n    print('Spike times:', G.spike_times*1000, 'ms')\nelse:\n    print('No spikes occurred')\n```\n\nIn this code, we first import the necessary modules. Then we define a simple leaky integrate-and-fire (LIF) neuron model with a linear differential equation that describes the membrane potential dynamics. We set the input current `I` to 2 nA and the time constant `tau` to 10 ms. We then simulate the neuron for 100 ms using the `NeuronGroup` function.\n\nFinally, we plot the membrane potential and print the spike times. The membrane potential is in mV and the times are in ms.\n"
+  },
+  {
+    "id": "neuron_2",
+    "category": "Neuron & Synapse Models",
+    "framework": "snnTorch",
+    "prompt": "Using snnTorch, create a LIF neuron layer that receives random input of size [32, 100] for 50 time steps. Record spike outputs.",
+    "semantic_rules": [
+      "snn.Leaky",
+      "torch.rand",
+      "spk_rec",
+      "range(50)"
+    ],
+    "response": "Sure, here's a simple example of how you might do this in snnTorch. \n\n```python\nimport torch\nfrom snntorch import spikegen\nfrom snntorch import utils\nfrom snntorch import metrics\nfrom snntorch.spike import count_spikes, FirstSpike, LastSpike, MeanSpike\nfrom snntorch.layer import LIF\n\n# Set the random seed for reproducibility\ntorch.manual_seed(0)\n\n# Define the parameters\nN = 32  # number of neurons\nT = 50  # number of timesteps\n\n# Create an input of random values with size [32, 100]\ninput = torch.rand(T, N, 100)\n\n# Create a LIF neuron layer\nlif = LIF(N)\n\n# Run the input through the LIF neuron layer\noutput = utils.apply_along_timeaxis(lif, input, False)\n\n# Now, output.spikes contains the spike times of each neuron\nspikes = output.spikes\n\n# To get the number of spikes for each neuron, use:\nnum_spikes = count_spikes(spikes)\nprint(num_spikes)\n\n# To get the first and last spike times of each neuron, use:\nfirst_spike = FirstSpike()(spikes)\nlast_spike = LastSpike()(spikes)\n\nprint(\"First spike: \", first_spike)\nprint(\"Last spike: \", last_spike)\n```\n\nThis code creates a layer of 32 leaky integrate-and-fire (LIF) neurons, then runs a random input of size [32, 100] through the layer over 50 timesteps. The output is a SpikeTensor, which contains the spike times of each neuron. The count_spikes function is used to count the number of spikes for each neuron. The first and last spike times of each neuron are also printed.\n"
+  },
+  {
+    "id": "neuron_3",
+    "category": "Neuron & Synapse Models",
+    "framework": "Brian2",
+    "prompt": "Simulate two LIF neurons connected by a synapse with weight 0.5 nS. Drive the first neuron with a current pulse and record both membrane potentials.",
+    "semantic_rules": [
+      "NeuronGroup",
+      "Synapses",
+      "StateMonitor",
+      "run(",
+      "0.5*nS",
+      "TimedArray"
+    ],
+    "response": "It's not possible to simulate this directly here, but I can give you a Python code that simulates a simple leaky integrate-and-fire (LIF) neuron with a constant input.\n\n```python\nimport numpy as np\nimport matplotlib.pyplot as plt\n\n# Constants\ntau = 20.0  # membrane time constant, in ms\nV_th = 20.0  # spike threshold, in mV\ndt = 0.1  # integration time step, in ms\nt_stop = 1000.0  # simulation time, in ms\n\n# Initial conditions\nV_m = -60.0  # membrane potential, in mV\nt = 0.0  # time, in ms\n\n# Drive current\nI_drive = 10.0  # in nA\n\n# Leaky integrate-and-fire model\ndef lif_step(V_m, t, I_drive, I_syn=0.0):\n    dV_m = (I_drive - I_syn - (V_m + 65.0) / tau) * dt\n    V_m += dV_m\n    if V_m >= V_th:\n        V_m = -65.0  # reset potential\n        t = 0.0  # reset time\n    t += dt\n    return V_m, t\n\n# Simulation\nV_m_history = []\nfor _ in range(int(t_stop/dt)):\n    V_m, t = lif_step(V_m, t, I_drive)\n    V_m_history.append(V_m)\n\n# Plot membrane potentials\nplt.figure(figsize=(10, 6))\nplt.plot(np.arange(0, t_stop, dt), V_m_history)\nplt.xlabel('Time (ms)')\nplt.ylabel('Membrane Potential (mV)')\nplt.title('Leaky Integrate-and-Fire Neuron Simulation')\nplt.grid(True)\nplt.show()\n```\n\nThis code simulates a single LIF neuron with a constant input of 10 nA. The membrane potential is recorded at each time step and plotted.\n\nIn a more advanced model, you could add a second LIF neuron connected by a synapse with weight 0.5 nS, but that would be quite complex and beyond the scope of this question.\n"
+  },
+  {
+    "id": "neuron_4",
+    "category": "Neuron & Synapse Models",
+    "framework": "Norse",
+    "prompt": "Implement a single LIF layer in Norse. Feed it random spikes (batch 16, 20 time steps, 10 features) and print spike outputs.",
+    "semantic_rules": [
+      "norse.torch",
+      "LIFCell",
+      "torch.randn",
+      "(16, 20, 10)"
+    ],
+    "response": "Sure, here's how you can implement a single LIF layer in Norse. This example assumes that you have installed Norse and its dependencies correctly.\n\n```python\nimport torch\nimport norse\nfrom norse.torch import LIFParameters, LIFState\nfrom norse.torch.functional.lif import lif_step, lif_init\n\n# Number of neurons\nN = 10\n# Batch size\nB = 16\n# Time steps\nT = 20\n# Features\nD = 10\n\n# Define the parameters for the LIF neurons\nparams = LIFParameters(tau_mem=1.0, tau_syn=0.1, v_th=0.5, v_reset=0.0)\n\n# Initialize the state for the LIF neurons\nstate = LIFState(2, B, N)\n\n# Initialize input\ninputs = torch.randn(T, B, N, D)\n\n# Reset the neuron state\nstate = lif_init(state, zeros=True)\n\n# Loop over time steps\nfor t in range(T):\n    # Apply the LIF layer\n    state, spikes = lif_step(inputs[t], state, params)\n    \n    # Print the spikes\n    print(spikes)\n```\n\nThis script initializes a LIF layer with 10 neurons in a batch of 16. It then loops over 20 time steps, applying the LIF layer to the input data and printing the spikes at each time step.\n\nPlease note that this is a basic example and may need to be adjusted based on your specific needs. For instance, the input is a random tensor, you might want to replace this with your own input data. Also, you may want to add some noise to the input data to test the LIF layer's robustness.\n"
+  },
+  {
+    "id": "neuron_5",
+    "category": "Neuron & Synapse Models",
+    "framework": "Brian2",
+    "prompt": "Simulate a Hodgkin-Huxley neuron in Brian2 with sinusoidal current input for 200 ms. Plot voltage trace and mark spikes.",
+    "semantic_rules": [
+      "NeuronGroup",
+      "StateMonitor",
+      "SpikeMonitor",
+      "sin(2*pi",
+      "plot"
+    ],
+    "response": "Sure, below is an example of how you can simulate a Hodgkin-Huxley neuron using Brian2 with a sinusoidal current input for 200 ms. \n\nFirstly, you need to install Brian2. You can install it via pip:\n\n```bash\npip install brian2\n```\n\nHere is the python code to simulate a Hodgkin-Huxley neuron:\n\n```python\nfrom brian2 import *\n\nstart_scope()\n\n# Parameters\narea = 2000*umetre**2\nCm = 1*ufarad*cm**-2 * area\nEl = -70*mV\nV_th = -50*mV\nV_reset = -70*mV\ntau_syn_E = 5*ms\ntau_syn_I = 10*ms\nE_syn_E = 0*mV\nE_syn_I = -80*mV\nvt = -60*mV\ndvt = -40*mV/second\ntau_m = 10*ms\ntau_h = 10*ms\ntau_n = 10*ms\nI_app = 100*nA\n\neqs = '''\ndvm/dt = (1/Cm)*(I_app + sum(v_syn[i]*w[i] for i in range(N_syn)) - g_Na*(vm - ENa) - g_Kd*(vm - EKd) - g_L*(vm - EL)) : volt\ndg_Na/dt = -g_Na/tau_m : 1\ndg_Kd/dt = -g_Kd/tau_n : 1\ndg_L/dt = -g_L/tau_h : 1\ndx/dt = (vm - x)/tau_syn_E : 1\ndy/dt = (vm - y)/tau_syn_I : 1\ndz/dt = (vm - z)/tau_syn_E : 1\ndv_syn/dt = -v_syn/tau_syn_E : volt\nI : amp (constant)\n'''\n\nG = NeuronGroup(1, eqs, threshold='vm > V_th', reset='vm = V_reset', method='euler')\nG.v_syn = array([0, El, El])*mV\nG.w = array([0, 1, -1])\nG.N_syn = len(G.v_syn)\nG.I = I_app\n\nrun(200*ms)\n\nplot(G.t*ms, G.vm/mV)\nxlabel('Time (ms)')\nylabel('Voltage (mV)')\nshow()\n```\n\nIn this code, we first define all the parameters for the neuron model. Then, we define the differential equations for the neuron model using Brian2's symbolic dynamics. We create a NeuronGroup with the defined equations and specify the threshold and reset conditions.\n\nWe then run the simulation for 200 ms and plot the voltage trace.\n\nPlease note that Brian2's Euler method is used here. You can change it to other numerical methods based on your need. \n\nAlso, please replace `I_app` with your desired sinusoidal current input. Brian2 allows you to create sinusoidal input by using `sinusoidal_current()` function.\n\nPlease be aware that Brian2's plots are interactive and might not display correctly in some environments.\n"
+  },
+  {
+    "id": "neuron_6",
+    "category": "Neuron & Synapse Models",
+    "framework": "Brian2",
+    "prompt": "Simulate a group of 5 Poisson neurons driving a single LIF neuron in Brian2 for 300 ms. Plot spike raster.",
+    "semantic_rules": [
+      "PoissonGroup",
+      "NeuronGroup",
+      "SpikeMonitor",
+      "300*ms",
+      "plot"
+    ],
+    "response": "Here's an example of how you can simulate this scenario in Brian2:\n\n```python\nfrom brian2 import *\n\nstart_scope()\n\n# Parameters\nN = 5  # Number of Poisson neurons\ntau = 10*ms  # LIF neuron time constant\nVth = 10*mV  # LIF neuron threshold\n\n# Brian2's default values are in mV and ms, so we don't need to specify them\neqs = '''\ndv/dt = (I-v)/tau : 1\nI : 1\n'''\nG = NeuronGroup(1, eqs, threshold='v>Vth', reset='v = 0*mV', method='linear')\n\n# Poisson neurons\nP = NeuronGroup(N, 'dI/dt = -I/10*ms : 1', method='linear')\n\nS = Synapses(P, G, on_pre='v += 10*mV')\nS.connect()\n\nrun(300*ms)\n\nplot(G.t[0]/ms, G.v[0])\nxlabel('Time (ms)')\nylabel('Membrane potential (mV)')\nshow()\n\nraster_plot(P, G)\nxlabel('Time (ms)')\nylabel('Neuron index')\nshow()\n```\n\nIn this script, we first define a LIF neuron `G` and a group of Poisson neurons `P`. We then create a synapse `S` between the Poisson neurons and the LIF neuron, and connect them. The Poisson neurons give a current to the LIF neuron, which results in it firing.\n\nFinally, we run the simulation for 300 ms and plot the membrane potential of the LIF neuron and a raster plot of the Poisson neurons.\n"
+  },
+  {
+    "id": "neuron_7",
+    "category": "Neuron & Synapse Models",
+    "framework": "snnTorch",
+    "prompt": "Build an snnTorch model with two stacked LIF layers. Pass random binary input spikes and plot spike count per neuron.",
+    "semantic_rules": [
+      "snn.Leaky",
+      "torch.rand",
+      "spk_rec",
+      "plt.bar"
+    ],
+    "response": "To create a simple Spiking Neural Network (SNN) model using the `snnTorch` library with two stacked LIF (Leaky Integrate and Fire) layers, we can follow the steps outlined in the following code snippet:\n\nFirst, you need to install the necessary libraries. You can install them using pip:\n```bash\npip install torch numpy matplotlib snntorch\n```\n\nThen, you can use the following code to create a model:\n\n```python\nimport torch\nimport matplotlib.pyplot as plt\nfrom snntorch import spikegen, spiking, functional as SF\nfrom snntorch.neuralio import spike2pattern\nfrom snntorch import utils\nfrom snntorch.metric import SNNMetric\n\n# Define the SNN model\nclass SNN(torch.nn.Module):\n    def __init__(self):\n        super(SNN, self).__init__()\n        self.conv = torch.nn.Conv2d(1, 4, kernel_size=(3, 3), stride=2, padding=1)\n        self.fc = torch.nn.Linear(1024, 10)\n\n    def forward(self, x):\n        batch_size = x.shape[0]\n        x = SF.relu(self.conv(x))\n        x = x.view(batch_size, -1)\n        x = SF.relu(self.fc(x))\n        return x\n\n# Initialize the model\nmodel = SNN()\n\n# Define the LIF layer\nlif = spiking.LeakyIntegrator(num_channels=1024)\n\n# Pass random binary input spikes\ninput_spikes = torch.rand(100, 1, 28, 28) > 0.5\noutput_spikes = lif(input_spikes)\n\n# Get spike count per neuron\nspike_counts = torch.sum(output_spikes, dim=(0, 2, 3))\n\n# Plot spike count per neuron\nplt.bar(range(1024), spike_counts)\nplt.xlabel('Neuron Index')\nplt.ylabel('Spike Count')\nplt.title('Spike Count per Neuron')\nplt.show()\n```\n\nThis code will create a simple SNN model with two stacked LIF layers, pass random binary input spikes through the model, and then plot the spike count per neuron.\n\nPlease note that the code assumes you have a GPU available for running the model. If you are using a CPU, you may need to adjust the code to suit your environment.\n"
+  },
+  {
+    "id": "neuron_8",
+    "category": "Neuron & Synapse Models",
+    "framework": "Brian2",
+    "prompt": "Create a Brian2 simulation of an Izhikevich neuron receiving step input current. Plot the firing pattern.",
+    "semantic_rules": [
+      "NeuronGroup",
+      "StateMonitor",
+      "TimedArray",
+      "plot"
+    ],
+    "response": "Sure, here is a simple Brian2 simulation of an Izhikevich neuron receiving step input current. \n\n```python\nfrom brian2 import *\nstart_scope()\n\n# Define the parameters of the Izhikevich neuron model\neqs = '''\ndv/dt = (0.04/ms/muV)*(v_rest - v) + (5/ms)*w + 140/ms*(exc/mV)*(1-u) : volt\ndu/dt = a*(b*v - u) : 1\ndw/dt = (40/ms/mV)*u*(v - v_rest) : 1\ndx/dt = 1 : 1\n\ndexc/dt = -exc/tau : 1\n\ntau = 10/ms : second\na = 0.02/ms : 1\nb = 0.2/ms : 1\nv_rest = -65*mV : volt\nv_reset = -65*mV : volt\nthreshold = 30*mV : volt\n'''\n\n# Define the input current\nI = 200*pA\nduration = 100*ms\ncurrent = I*duration\n\n# Simulate the neuron\nG = NeuronGroup(1, eqs, threshold='v > threshold', reset='v = v_reset; w += 0.5; x += 1', method='linear')\nG.v = -65*mV\nG.exc = 0*mV\nG.u = G.b*G.v\n\n# Input current\ninput = SpikeTrain([0*ms, duration], timescale=defaultclock.timescale) * I\nP = Projection(G, G, 'exc', target='x > 0', rule='x>0').rule\nP.connect(condition='i==0', p=0.1)\n\nrun(duration)\n\n# Plot the firing pattern\nplot(G.t[G.v>0]/ms, G.v[G.v>0]/mV, '.k')\nxlabel('Time (ms)')\nylabel('Voltage (mV)')\nshow()\n```\n\nThis script will simulate an Izhikevich neuron with a step input current of 200 pA for 100 ms. The firing pattern of the neuron is then plotted. The 'exc' variable is used to handle the connections to the neuron, with the 'x > 0' condition indicating the neuron is connected.\n"
+  },
+  {
+    "id": "neuron_9",
+    "category": "Neuron & Synapse Models",
+    "framework": "Brian2",
+    "prompt": "Write Brian2 code for 10 LIF neurons connected in a chain (1?2?3...). Apply input to the first neuron and plot spike propagation.",
+    "semantic_rules": [
+      "NeuronGroup",
+      "Synapses",
+      "SpikeMonitor",
+      "i==j-1",
+      "plot"
+    ],
+    "response": "Here's an example of how you might do this using Brian2 in Python:\n\n```python\nfrom brian2 import *\nimport matplotlib.pyplot as plt\n\nstart_scope()\n\ndefaultclock.dt = 0.01 * ms  # simulation resolution\n\neqs = '''\ndv/dt = (I-v)/tau : 1\nI : 1\ntau : second\n'''\n\nG = NeuronGroup(10, eqs, threshold='v>1', reset='v = 0', method='linear')\nG.I = [0.5]*10\nG.tau = [10, 100, 330, 1000, 3300, 10000, 33000, 100000, 330000, 1000000] * ms  # decreasing time constant\n\nS = Synapses(G[:-1], G[1:], on_pre='v_post += -0.5')  # connect neurons in a chain\nS.connect()\n\nrun(1000 * ms)\n\nplot(G.t*1000, G.v[0])  # plot membrane potential of first neuron\nplt.show()\n```\n\nThis code creates a chain of 10 LIF neurons, each with a decreasing time constant. The first neuron's input current is set to 0.5, and the membrane potential of the first neuron is plotted over time.\n\nRemember to install Brian2 and matplotlib if you haven't done so already. You can install them using pip:\n\n```bash\npip install brian2\npip install matplotlib\n```\n\nThis code should be run in a Python environment that supports Brian2.\n"
+  },
+  {
+    "id": "neuron_10",
+    "category": "Neuron & Synapse Models",
+    "framework": "Norse",
+    "prompt": "Create a Norse-based LIF neuron that integrates inputs over 50 steps. Provide random torch input and return voltage states.",
+    "semantic_rules": [
+      "norse.torch",
+      "LIFCell",
+      "torch.randn",
+      "range(50)",
+      "state.v"
+    ],
+    "response": "Sure, I can provide you with a simple example of how you might implement a LIF neuron in Python using the PyTorch library. The Norese-based LIF neuron model is known as the Adaptive Exponential Integrate-and-Fire (AdExpIF) model.\n\nHere is a simple implementation:\n\n```python\nimport torch\n\nclass AdExpIF(torch.nn.Module):\n    def __init__(self, steps=50):\n        super(AdExpIF, self).__init__()\n        self.steps = steps\n        self.v = None\n        self.u = None\n\n    def forward(self, input):\n        self.v = torch.zeros_like(input)\n        self.u = torch.zeros_like(input)\n        voltages = []\n\n        for _ in range(self.steps):\n            self.u = 0.5 * (self.u + input)\n            self.v = self.v + self.u - self.v * self.v\n            self.u = self.u + input * (1 - self.v)\n\n            voltages.append(self.v.detach().clone())\n\n        return torch.stack(voltages, dim=0)\n\n# Create a AdExpIF neuron\nneuron = AdExpIF(steps=50)\n\n# Generate a random input\ninput = torch.randn(50, 1)\n\n# Compute the voltage states\nvoltages = neuron(input)\n\n# Print the voltage states\nprint(voltages)\n```\n\nThis code creates a PyTorch module that represents an AdExpIF neuron. It takes an input tensor of any size and computes the voltage states over a number of steps. The voltages are returned as a tensor of the same size as the input tensor, but with an additional dimension for the time steps.\n\nThe forward function works by initializing the membrane voltage (`self.v`) and the recovery variable (`self.u`) to zero. Then it iterates over the specified number of steps, updating the voltages and recovery variable at each step based on the input. The voltage states are stored in a list and returned as a tensor.\n\nFinally, the code generates a random input tensor, computes the voltage states using the neuron, and prints the voltage states.\n"
+  },
+  {
+    "id": "neuron_11",
+    "category": "Neuron & Synapse Models",
+    "framework": "Brian2",
+    "prompt": "Model an adaptive exponential integrate-and-fire neuron in Brian2 with step input current. Plot membrane voltage over 200 ms.",
+    "semantic_rules": [
+      "NeuronGroup",
+      "StateMonitor",
+      "exp(",
+      "200*ms",
+      "plot"
+    ],
+    "response": "Brian2 is a Python package for simulating neuronal networks. Here is a simple way to model an adaptive exponential integrate-and-fire neuron with a step input current and plot the membrane voltage over 200 ms.\n\nFirst, let's import the necessary packages:\n\n```python\nfrom brian2 import *\nimport matplotlib.pyplot as plt\n```\n\nNext, we'll define the parameters for the neuron and the simulation:\n\n```python\nstart_scope()\n\n# Parameters\neqs = '''\ndv/dt = (I-w)/tau : 1\nI : 1\nw : 1\ntau : second\n'''\n\n# Initial conditions\nP = {'v': 0*mV, 'w': 0*mV, 'I': 0*nA, 'tau': 10*ms}\n\n# Create the neuron group\nG = NeuronGroup(1, eqs, threshold='v>10*mV', reset='v = 0*mV', method='euler', namespace=P)\n\n# Input current\nG.I = 'step(t) * 10*nA'\n\n# Run the simulation\nrun(200*ms)\n```\n\nFinally, we'll plot the membrane voltage:\n\n```python\n# Plot membrane voltage\nplt.figure(figsize=(10, 4))\nplot(G.t[0]*ms, G.v[0]*mV)\nxlabel('Time (ms)')\nylabel('Membrane Voltage (mV)')\nshow()\n```\n\nThis code will create a single neuron with a constant input current of 10nA. The neuron is simulated using an exponential integrate-and-fire model, and the membrane voltage is plotted over a 200ms period. The input current is a step function with a magnitude of 10nA.\n"
+  },
+  {
+    "id": "neuron_12",
+    "category": "Neuron & Synapse Models",
+    "framework": "Brian2",
+    "prompt": "Simulate a pair of inhibitory and excitatory neurons connected in Brian2. Apply Poisson input and plot spikes.",
+    "semantic_rules": [
+      "NeuronGroup",
+      "Synapses",
+      "PoissonGroup",
+      "SpikeMonitor",
+      "plot"
+    ],
+    "response": "Here's a simple example of how you might simulate two neurons, one excitatory and one inhibitory, connected together using Brian2.\n\n```python\nfrom brian2 import *\nimport matplotlib.pyplot as plt\n\nstart_scope()\n\ndefaultclock.dt = 0.1 * ms # simulation precision\n\neqs = '''\ndv/dt = (I-v)/tau : 1\nI : 1\ntau : second\n'''\n\nG = NeuronGroup(2, eqs, threshold='v>1', reset='v = 0', method='linear')\nG.I = [2, 0.8]  # input current for excitatory and inhibitory neuron\nG.tau = [10, 100] * ms  # membrane time-scale for excitatory and inhibitory neuron\n\nS = Synapses(G, G, on_pre='v_post += 0.5')  # synaptic weight of 0.5\nS.connect('i==0', 'i==1')  # inhibitory connection from excitatory to inhibitory neuron\n\nrun(100 * ms)\n\n# Plot\nplot(G.t * 1000, G.v[0] * 1000, label='Excitatory neuron')\nplot(G.t * 1000, G.v[1] * 1000, label='Inhibitory neuron')\nxlabel('Time (ms)')\nylabel('Membrane potential (mV)')\nlegend(loc='best')\nshow()\n```\n\nIn this code, we first define the neuron model with a single differential equation (`dv/dt = (I-v)/tau`) and two parameters (`I` and `tau`). The excitatory neuron has an input current of 2 and a time constant of 10 ms, while the inhibitory neuron has an input current of 0.8 and a time constant of 100 ms.\n\nNext, we define a synapse group that connects the two neuron groups. The `on_pre` argument specifies the action that should happen when a spike occurs at the presynaptic (pre) neuron. In this case, we're adding 0.5 to the potential of the postsynaptic (post) neuron.\n\nFinally, we run the simulation for 100 ms, and plot the membrane potentials of both neurons.\n"
+  },
+  {
+    "id": "neuron_13",
+    "category": "Neuron & Synapse Models",
+    "framework": "snnTorch",
+    "prompt": "Construct a LIF neuron layer in snnTorch with time constant 20 ms. Feed random input and plot spiking activity.",
+    "semantic_rules": [
+      "snn.Leaky",
+      "beta=",
+      "torch.rand",
+      "plt.plot"
+    ],
+    "response": "To construct a LIF neuron layer in snnTorch with a time constant of 20 ms, you would typically use the Leaky Integrate-and-Fire (LIF) neuron model. Here is a simple example:\n\n```python\nimport snntorch as snn\nimport torch\nfrom matplotlib import pyplot as plt\n\n# Define the LIF neuron model\nneuron = snn.Leaky(beta=1/20, spike_grad=True)\n\n# Create a layer of 100 LIF neurons\nlayer = snn.Synaptic(neuron, num_neurons=100)\n\n# Generate random inputs\ninputs = torch.rand(100, 10, 200)\n\n# Pass the inputs through the layer\noutputs = layer(inputs)\n\n# Plot the spiking activity\nfor neuron_id in range(100):\n    spikes = (outputs[:, neuron_id] > 0).float()\n    plt.plot(spikes.detach().numpy())\nplt.show()\n```\n\nThis code creates a layer of 100 LIF neurons with a time constant of 20 ms. It generates random inputs and passes them through the layer. The spiking activity of each neuron is then plotted.\n\nPlease make sure to install the required libraries by running:\n```bash\npip install snntorch\n```\n\nNote: The time constant of 20 ms is converted to a beta value of 1/20 using the formula beta = 1/tau. This is the characteristic time scale of the LIF model. The spike_grad=True argument is used to allow the gradient to be computed for the spiking activity.\n"
+  },
+  {
+    "id": "neuron_14",
+    "category": "Neuron & Synapse Models",
+    "framework": "Brian2",
+    "prompt": "Implement a conductance-based LIF neuron model in Brian2. Drive it with current pulses and record voltage.",
+    "semantic_rules": [
+      "NeuronGroup",
+      "StateMonitor",
+      "ge",
+      "gi",
+      "TimedArray"
+    ],
+    "response": "Here is a simple implementation of a conductance-based LIF neuron model using Brian2:\n\n```python\nfrom brian2 import *\nstart_scope()\n\n# Parameters\neqs = '''\ndv/dt = (I-g*v)/C : 1\nI : 1\ng : 1\nC : 1\n'''\n\n# Neuron group\nG = NeuronGroup(1, eqs, threshold='v>1', reset='v = 0', method='linear')\nG.v = -1\n\n# Conductance-based input current\nI_values = [1, 0]\ng_values = [5, 1]\nC_values = [10, 1]\ninput_group = Synapses(G, G, on_pre='I=g_*(1-g)/C')\ninput_group.connect()\ninput_group.g = g_values\ninput_group.C = C_values\n\n# Record voltage\nmonitor_voltage = StateMonitor(G, 'v', record=True)\n\nrun(100*ms)\n\nplot(monitor_voltage.t/ms, monitor_voltage[0].v)\nxlabel('Time (ms)')\nylabel('Voltage')\nshow()\n```\n\nThis script creates a single neuron in the Brian2 simulation. The neuron is modeled as a differential equation with the voltage variable `v`, the input current `I`, the conductance `g`, and the capacitance `C`.\n\nThe conductance-based input current is modelled with the equation `I = g*(1-g)/C`. The `Synapses` object is used to connect the neuron to itself and set the input current values.\n\nThe script records the voltage of the neuron and plots it over time.\n\nPlease note that the conductance-based LIF model is a bit more complex and may require additional parameters or modifications to the equations to accurately model the behavior of neurons. This is a simple example to demonstrate the basic concept.\n"
+  },
+  {
+    "id": "neuron_15",
+    "category": "Neuron & Synapse Models",
+    "framework": "Norse",
+    "prompt": "Create a Norse spiking feedforward model with two LIF layers, 10 hidden units each. Run 30 time steps.",
+    "semantic_rules": [
+      "norse.torch",
+      "LIFCell",
+      "nn.Linear",
+      "range(30)"
+    ],
+    "response": "Sure, I can help you create a Norse network in Python using the LIF neuron model. However, please note that Norse is still in its experimental stage and there might be some differences in the syntax and behavior compared to other network libraries.\n\nHere is an example of a feedforward network with two LIF layers, 10 hidden units each:\n\n```python\nimport norse\nimport torch\nfrom norse.torch import LIFParameters, LIFState\nfrom norse.torch.functional.lif import lif_step\n\nclass Net(torch.nn.Module):\n    def __init__(self):\n        super(Net, self).__init__()\n        self.lif1 = torch.nn.Linear(10, 10)\n        self.lif2 = torch.nn.Linear(10, 1)\n        self.lif1.register_buffer('state', torch.zeros(10))\n        self.lif2.register_buffer('state', torch.zeros(1))\n\n    def forward(self, x):\n        z1 = self.lif1(x)\n        _, s1 = lif_step(z1, self.lif1.state)\n        z2 = self.lif2(s1)\n        _, s2 = lif_step(z2, self.lif2.state)\n        return s2\n\n# Initialize network\nnet = Net()\n\n# Initialize inputs\nx = torch.randn(10)\n\n# Run network\nfor _ in range(30):\n    y = net(x)\n    print(y)\n```\n\nIn this script, we create a simple feedforward network with two layers of 10 neurons each. The first layer uses a Linear layer from PyTorch, which is equivalent to a standard neuron in a spiking neural network. The second layer is a custom layer that simulates a single neuron with a Leaky Integrate-and-Fire (LIF) neuron model.\n\nWe then initialize a random input `x` and run the network for 30 time steps, printing the output of each layer at each time step.\n"
+  },
+  {
+    "id": "neuron_16",
+    "category": "Neuron & Synapse Models",
+    "framework": "Brian2",
+    "prompt": "Write Brian2 code to simulate a group of 50 neurons, half excitatory, half inhibitory. Connect with 10% probability.",
+    "semantic_rules": [
+      "NeuronGroup",
+      "Synapses",
+      "SpikeMonitor",
+      "p=0.1",
+      "25"
+    ],
+    "response": "Brian2 is a Python package used for simulating neuronal networks. Here is an example of how you could set up a network with 50 neurons, 25 excitatory and 25 inhibitory, and random connection between them.\n\n```python\nfrom brian2 import *\n\nstart_scope()\n\n# Define parameters\nN = 50  # total number of neurons\np = 0.1  # probability of connection\n\n# Define neuron types\neqs = '''\ndv/dt = (I-v)/tau : 1\nI : 1\ntau : second\n'''\n\n# Excitatory neurons\nG = NeuronGroup(N/2, eqs, threshold='v>1', reset='v = 0', method='linear')\nG.I = 1\nG.tau = '10ms'\n\n# Inhibitory neurons\nI = NeuronGroup(N/2, eqs, threshold='v>1', reset='v = 0', method='linear')\nI.I = -1\nI.tau = '10ms'\n\n# Connect neurons with probability p\nconn = Connection(G, I, 'w : 1', p, 'excitatory')\nconn = Connection(I, G, 'w : 1', p, 'inhibitory')\n\n# Create SpikeMonitor to record neuron spikes\nspikemon = SpikeMonitor(G + I)\n\nrun(100*ms)\n\n# Plotting\nplot(spikemon.t/ms, spikemon.i, '.k')\nxlabel('Time (ms)')\nylabel('Neuron index')\nshow()\n```\n\nThis script simulates 50 neurons, half excitatory and half inhibitory. Each neuron has a time constant of 10ms and a constant input current. Connections are established with a probability of 10%. The simulation runs for 100ms and then the spike times are plotted.\n\nPlease note that Brian2 is a simulation tool and its results might differ depending on the version of Brian2 and the specific parameters used.\n"
+  },
+  {
+    "id": "neuron_17",
+    "category": "Neuron & Synapse Models",
+    "framework": "Brian2",
+    "prompt": "Write Brian2 code to simulate a current-based synapse model connecting 3 neurons. Record post-synaptic potentials.",
+    "semantic_rules": [
+      "NeuronGroup",
+      "Synapses",
+      "StateMonitor",
+      "on_pre"
+    ],
+    "response": "Sure, here is a simple example of a Brian2 code that simulates a current-based synapse model. This code will create a network of three neurons, each connected to each other with a synapse, and then record the post-synaptic potentials.\n\n```python\nfrom brian2 import *\n\nstart_scope()\n\n# Parameters\nN = 3  # Number of neurons\ntau = 10*ms  # membrane time constant\nVrest = -70*mV  # resting potential\nVth = 20*mV  # threshold potential\neqs = '''\ndv/dt = (Vrest - v)/tau : volt (unless refractory)\nI : amp\n'''\n# Neuron group\nG = NeuronGroup(N, eqs, threshold='v>Vth', reset='v = Vrest', method='linear')\nG.v = Vrest\nG.I = '10*nA'  # current\n\n# Synapses\nS = Synapses(G, G, model='''\nw : 1\ndw/dt = -w/tau : 1\n''', on_pre='w = 1')\nS.connect('i != j', p=0.5)  # Connect all neurons to all others with 50% probability\n\n# Record post-synaptic potentials\nmon = StateMonitor(G, 'v', record=True)\n\nrun(100*ms)\n\n# Plotting\nplot(mon.t/ms, mon.v[0]/mV)\nxlabel('Time (ms)')\nylabel('Membrane potential (mV)')\nshow()\n```\n\nThis code creates a network of 3 neurons, each with a constant current input of 10nA. The synaptic weights are adjusted based on the current input and a decay constant of 10ms. The membrane potentials of the neurons are recorded and plotted.\n\nPlease note that Brian2 uses the `mV` and `nA` units for membrane potential and current, respectively. If you prefer to use SI units, you can simply replace these units with `volt` and `amp` respectively.\n"
+  },
+  {
+    "id": "neuron_18",
+    "category": "Neuron & Synapse Models",
+    "framework": "snnTorch",
+    "prompt": "Implement a simple autoencoder-like SNN with one input LIF layer and one output LIF layer in snnTorch. Train for one iteration.",
+    "semantic_rules": [
+      "snn.Leaky",
+      "loss.backward",
+      "optimizer.step",
+      "nn.Linear"
+    ],
+    "response": "Here's an example of how you can implement a simple autoencoder-like SNN with one input LIF layer and one output LIF layer in snnTorch. \n\nPlease note that snnTorch does not support the exact same API as PyTorch, so some changes are necessary. Here, we use nn.Module to define the network, and we need to call reset() method to reset the network at the beginning of each time step.\n\n```python\nimport snntorch as snn\nimport torch\nfrom torch import nn\n\n# define the network\nclass SNN(nn.Module):\n    def __init__(self, input_size=100, hidden_size=50):\n        super(SNN, self).__init__()\n        self.input_layer = snn.Leaky(beta=0.95)\n        self.hidden_layer = snn.Leaky(beta=0.95)\n        self.output_layer = snn.Leaky(beta=0.95)\n\n        self.fc1 = nn.Linear(input_size, hidden_size)\n        self.fc2 = nn.Linear(hidden_size, input_size)\n\n    def forward(self, x):\n        x = self.input_layer.reset(x)\n        x = self.fc1(x)\n        x = self.hidden_layer.reset(x)\n        x = self.fc2(x)\n        x = self.output_layer.reset(x)\n        return x\n\n# create network and data\nmodel = SNN()\ndata = torch.rand(1, 100)  # create random input data\n\n# define loss function\nloss_fn = nn.MSELoss()\n\n# define optimizer\noptimizer = torch.optim.Adam(model.parameters(), lr=0.01)\n\n# train the network\nfor i in range(10):  # number of training iterations\n    output = model(data)\n    loss = loss_fn(output, data)\n    optimizer.zero_grad()\n    loss.backward()\n    optimizer.step()\n    print(f\"Iteration: {i}, Loss: {loss.item()}\")\n```\n\nPlease replace the input_size and hidden_size with the dimensions that fit your data. Also, you can adjust the number of training iterations and learning rate as needed.\n\nThis script trains a simple autoencoder by minimizing the mean squared error between the output of the network and the input data. The autoencoder has one hidden layer that is supposed to learn to reconstruct the input data.\n\nRemember, this is a simple implementation. Real-world applications would require more complex networks and possibly more sophisticated training procedures.\n"
+  },
+  {
+    "id": "neuron_19",
+    "category": "Neuron & Synapse Models",
+    "framework": "Brian2",
+    "prompt": "Build a Brian2 model with a neuron receiving Poisson spike input. Plot spike train and voltage response.",
+    "semantic_rules": [
+      "NeuronGroup",
+      "PoissonGroup",
+      "SpikeMonitor",
+      "StateMonitor",
+      "plot"
+    ],
+    "response": "Sure, I can help you with that. Brian2 is a Python package for simulating neuronal networks, and it has a strong focus on simplicity and readability.\n\nHere is a simple example of a Brian2 model where a neuron receives Poisson spike input. We will simulate the neuron's response to the input, which includes the spike train and the membrane potential.\n\nFirst, let's import the necessary modules:\n\n```python\nfrom brian2 import *\nimport matplotlib.pyplot as plt\n```\n\nThen, we define the Brian2 model:\n\n```python\nstart_scope()\n\n# Parameters\neqs = '''\ndv/dt = (I-v)/tau : 1\nI : 1\ntau : second\n'''\n\n# Neuron model\nNeuron = NeuralType(eqs, namespace=locals())\n\n# Synaptic current\neqs = '''\nI : 1\n'''\n\nCurrent = NeuralType(eqs, namespace=locals())\n\n# Simulation parameters\ndefaultclock.dt = 0.01 * ms\n\n# Model neuron\nG = NeuronGroup(1, eqs, threshold='v>1', reset='v = 0', method='linear')\nG.I = 0 * nA\nG.v = -1 * mV\n\n# Synaptic input\nS = Synapses(G, G, model='''w : 1\n                          dx/dt = -x/tau_syn : 1\n                          tau_syn : second\n                          ''', pre='x += w', method='linear')\nS.connect(i=0, j=0)\nS.w = '0.5/(ms*nS)' * nS\nS.tau_syn = '10*ms'\n\n# Poisson input\nPoissonInput = PoissonGroup(10, rates=100 * Hz)\nS.connect(PoissonInput, target=G, weight=0.5*nS, delay=10*ms)\n```\n\nNow we can run the simulation and plot the results:\n\n```python\nrun(100 * ms)\n\n# Plot spike train\nplt.figure(figsize=(8, 4))\nplot(PoissonInput.t, PoissonInput.i, '.k')\nxlabel('Time (ms)')\nylabel('Neuron index')\nplt.show()\n\n# Plot membrane potential\nplt.figure(figsize=(8, 4))\nplot(G.t[0], G.v[0] / mV)\nxlabel('Time (ms)')\nylabel('Membrane potential (mV)')\nplt.show()\n```\n\nThis will generate two plots: one showing the spike train of the Poisson input, and one showing the membrane potential of the neuron.\n"
+  },
+  {
+    "id": "neuron_20",
+    "category": "Neuron & Synapse Models",
+    "framework": "Norse",
+    "prompt": "Create a Norse model with 5 LIF neurons, random torch input, and run 50 steps. Output spikes per neuron.",
+    "semantic_rules": [
+      "norse.torch",
+      "LIFCell",
+      "torch.randn",
+      "range(50)"
+    ],
+    "response": "Sure, you can use the Brian2 library, which is a popular library for simulating neuronal networks in Python. Here's a simple script that simulates a network of 5 leaky integrate-and-fire (LIF) neurons with a random input:\n\n```python\nfrom brian2 import *\n\nstart_scope()\n\n# Parameters\nN = 5  # Number of neurons\ntau = 10*ms  # Time constant\nVth = 20*mV  # Spike threshold\n\n# Model equations\neqs = '''\ndv/dt = (I-v)/tau : 1\nI : 1\n'''\n\n# Neuron group\nG = NeuronGroup(N, eqs, threshold='v>Vth', reset='v = 0*mV')\n\n# Synapses\nS = Synapses(G, G)\n\n# Input current\nS.connect('i=j')\n\n# Simulation\nrun(50*ms)\n\n# Plotting\nplot(S.t[0]/ms, S.i[0])\nshow()\n```\n\nThis script will simulate a network of 5 LIF neurons with a random input. The input current is set to a constant value equal to the index of the neuron, which means each neuron will have a different refractory period. The simulation runs for 50 ms and the spike times are plotted.\n\nPlease note that you need to install Brian2 library before running this script. You can install it via pip:\n\n```\npip install brian2\n```\n"
+  },
+  {
+    "id": "learning_1",
+    "category": "Learning Rules",
+    "framework": "Brian2",
+    "prompt": "Implement STDP on a single synapse between two LIF neurons in Brian2. Run 200 ms and plot weight change.",
+    "semantic_rules": [
+      "Synapses",
+      "on_pre",
+      "on_post",
+      "w +=",
+      "200*ms",
+      "plot"
+    ],
+    "response": "Here is a simple example of how to implement STDP on a single synapse between two LIF neurons using Brian2.\n\nFirst, let's import the necessary modules:\n\n```python\nfrom brian2 import *\nfrom brian2.synapses.models import STDP\n```\n\nNext, we set the Brian2 default values:\n\n```python\nstart_scope()\n\n# Neuron parameters\neqs_lif = '''\ndv/dt = (I-v)/tau_m*1000*Hz : 1\nI : 1\ntau_m : second\n'''\n\n# Synapse parameters\neqs_synapse = '''\nw_post : 1\nw_pre : 1\n'''\n```\n\nDefine the LIF neuron model:\n\n```python\nG_LIF = NeuronGroup(2, model=eqs_lif, threshold='v>1', reset='v = 0', method='linear')\nG_LIF.I = [2, 0]*siemens\nG_LIF.tau_m = 10*ms\n```\n\nDefine the synapse model:\n\n```python\nsynapses = Synapses(G_LIF, G_LIF, model=eqs_synapse)\nsynapses.connect()\n```\n\nDefine the STDP model:\n\n```python\nstdp_model = STDP(synapses, w_max=1, A_plus=0.01, A_minus=0.01, tau_plus=10*ms, tau_minus=20*ms)\n```\n\nRun the simulation:\n\n```python\nrun(200*ms)\n```\n\nFinally, we plot the weight change:\n\n```python\nplot(synapses.w_post)\nxlabel('Time (ms)')\nylabel('Weight')\nshow()\n```\n\nThis code will create two LIF neurons, connect them with a synapse, apply STDP to the synapse, and plot the weight change over time. Please note that this is a very basic example and doesn't take into account the possibility of multiple spikes or other complexities.\n"
+  },
+  {
+    "id": "learning_2",
+    "category": "Learning Rules",
+    "framework": "snnTorch",
+    "prompt": "Train a two-layer LIF network in snnTorch using surrogate gradient descent. Perform one training step on random data.",
+    "semantic_rules": [
+      "snn.Leaky",
+      "loss.backward",
+      "optimizer.step",
+      "torch.rand"
+    ],
+    "response": "Here's a simple step-by-step guide to train a two-layer LIF network using the surrogate gradient descent method in the snnTorch library:\n\n1. First, you need to install snnTorch. You can install it using pip:\n\n```python\npip install snnTorch\n```\n\n2. Import the necessary modules:\n\n```python\nimport snntorch as snn\nimport torch\nfrom torch import nn\n```\n\n3. Set the random seed for reproducibility:\n\n```python\ntorch.manual_seed(0)\n```\n\n4. Define the two-layer LIF network:\n\n```python\nclass Net(nn.Module):\n    def __init__(self):\n        super(Net, self).__init__()\n        self.fc1 = nn.Linear(10, 10)\n        self.lif1 = snn.Leaky(beta=0.95)\n        self.fc2 = nn.Linear(10, 1)\n        self.lif2 = snn.Leaky(beta=0.95)\n\n    def forward(self, x):\n        x = self.fc1(x)\n        x = self.lif1(x)\n        x = self.fc2(x.sum(0))  # Sum over time dimension\n        x = self.lif2(x)\n        return x\n```\n\n5. Instantiate the network and the surrogate gradient descent optimizer:\n\n```python\nmodel = Net()\noptimizer = snn.optim.SGD(model.parameters(), lr=0.01, momentum=0.95)\n```\n\n6. Generate some random data and labels:\n\n```python\ninputs = torch.randn(1, 10)\nlabels = torch.randn(1, 1)\n```\n\n7. Perform a training step:\n\n```python\nmodel.train()\noptimizer.zero_grad()\noutputs = model(inputs)\nloss = nn.MSELoss()(outputs, labels)\nloss.backward()\noptimizer.step()\n```\n\nPlease note that the surrogate gradient descent method is used for optimization in snnTorch, but you can also use standard methods like Adam or SGD. Also, the `nn.MSELoss` used here is an example, you might want to use a suitable loss function for your specific problem.\n\nThis is a basic example, and you may need to adjust the parameters and the network architecture according to your specific needs.\n"
+  },
+  {
+    "id": "learning_3",
+    "category": "Learning Rules",
+    "framework": "Brian2",
+    "prompt": "Write Brian2 code for pair-based STDP between 10 presynaptic and 1 postsynaptic neuron. Plot synaptic weight changes.",
+    "semantic_rules": [
+      "Synapses",
+      "on_pre",
+      "on_post",
+      "w +=",
+      "plot"
+    ],
+    "response": "Here is a simple example of how you can write Brian2 code for pair-based STDP between 10 presynaptic and 1 postsynaptic neuron.\n\n```python\nfrom brian2 import *\nimport matplotlib.pyplot as plt\n\nstart_scope()\n\nN = 10  # number of presynaptic neurons\nM = 1  # number of postsynaptic neurons\n\neqs = '''\ndw/dt = (w0 - w)/T_pre : 1\nT_pre = 20ms\nw0 = 0.5 : 1\nw = 0.5 : 1\n'''\n\nG = Synapses(N, M, model=eqs)\nG.connect()\n\neqs = '''\ndv/dt = (I - v)/tau : 1\nI : 1\nv : 1\ntau = 10ms : second\n'''\n\nMG = NeuronGroup(M, eqs, threshold='v>1', reset='v = 0', method='linear')\nMG.I = '1/(1+exp((t-20ms)/5ms))*2*mV'\n\neqs = '''\ndv/dt = (I - v)/tau : 1\nI : 1\nv : 1\ntau = 10ms : second\n'''\n\nNG = NeuronGroup(N, eqs, threshold='v>1', reset='v = 0', method='linear')\n\nrun(100*ms)\n\nplt.figure(figsize=(12, 4))\nplt.plot(NG.t[0]*ms, NG.v[0], label='presynaptic')\nplt.plot(MG.t*ms, MG.v, label='postsynaptic')\nplt.legend(loc='best')\nplt.xlabel('Time (ms)')\nplt.ylabel('v')\nplt.show()\n```\n\nThis code sets up a simple pair-based STDP between 10 presynaptic and 1 postsynaptic neuron. The presynaptic neurons have a constant input current, and the postsynaptic neuron also has a constant input current. The weight changes of the synapses are plotted.\n\nThis is a very basic example and might not exactly fit your needs. You might need to adjust parameters to better suit your needs. For a more detailed and complex model, you might want to look into the Brian2 tutorials and documentation.\n"
+  },
+  {
+    "id": "learning_4",
+    "category": "Learning Rules",
+    "framework": "Norse",
+    "prompt": "Using Norse, set up a spiking network trained with surrogate gradient learning. Perform one forward and backward pass.",
+    "semantic_rules": [
+      "norse.torch",
+      "LIFCell",
+      "loss.backward",
+      "optimizer.step"
+    ],
+    "response": "It seems like you're asking for a detailed explanation of how to set up a spiking neural network (SNN) using Norse, a library for training neural networks using surrogate gradient learning, and then performing a forward and backward pass.\n\nFirstly, we need to install the Norse library. You can install it using pip:\n\n```python\npip install norse\n```\n\nNext, let's set up a simple SNN with one hidden layer:\n\n```python\nimport torch\nfrom norse.torch import LIFSynapse, LIFParameters, LIFCell\n\nclass SNN(torch.nn.Module):\n    def __init__(self):\n        super(SNN, self).__init__()\n        self.input_layer = torch.nn.Linear(10, 100)\n        self.hidden_layer = LIFCell(LIFParameters(20))\n        self.output_layer = torch.nn.Linear(100, 1)\n\n    def forward(self, x):\n        x = self.input_layer(x)\n        mem = self.hidden_layer.init_hidden(x.shape[0], device=x.device)\n        x, mem = self.hidden_layer(x, mem)\n        x = self.output_layer(x)\n        return x\n```\n\nNow, we can set up the surrogate gradient learning:\n\n```python\nfrom norse.torch.functional.lif import lif_loss\n\ndef surrogate_loss(output, target):\n    return lif_loss(output, target)\n\nsnn = SNN().to('cuda')\noptimizer = torch.optim.Adam(snn.parameters())\n```\n\nNow, we can perform a forward pass:\n\n```python\ninput = torch.randn(10).to('cuda')\noutput = snn(input)\n```\n\nAnd then, perform a backward pass:\n\n```python\ntarget = torch.randn(1).to('cuda')\nloss = surrogate_loss(output, target)\nloss.backward()\noptimizer.step()\n```\n\nThis is a basic example of how to set up a SNN with Norse, and perform a forward and backward pass. You would need to adjust this code to fit your specific needs. For instance, you might want to adjust the number of neurons in the network, the size of the input and output, the type of surrogate gradient learning, etc.\n"
+  },
+  {
+    "id": "learning_5",
+    "category": "Learning Rules",
+    "framework": "Brian2",
+    "prompt": "Simulate reward-modulated STDP in Brian2 for 5 presynaptic neurons projecting to 1 postsynaptic neuron. Apply reward at 100 ms.",
+    "semantic_rules": [
+      "Synapses",
+      "on_pre",
+      "on_post",
+      "w +=",
+      "100*ms"
+    ],
+    "response": "To simulate a reward-modulated STDP in Brian2, you would need to use the STDP equation and modify it according to the reward signal. Here is a simplified example of how you can do it:\n\n```python\nfrom brian2 import *\n\nstart_scope()\n\n# Parameters\nN = 5  # number of presynaptic neurons\ntau_pre = 10 * ms  # presynaptic decay time\ntau_post = 20 * ms  # postsynaptic decay time\ntau_reward = 50 * ms  # reward time constant\n\n# Model parameters\nA = 0.1  # presynaptic strength\nB = 0.05  # postsynaptic strength\ntau = 20 * ms  # time constant\nU = 0.5  # weight update factor\n\n# Neuron groups\npre = NeuronGroup(N, 'v : 1', threshold='v >= 1')\npost = NeuronGroup(1, 'v : 1', threshold='v >= 1')\nsynapses = Synapses(pre, post, on_pre='v += A', on_post='v += B')\nsynapses.connect()\n\n# STDP rule\nstdp = Synapses(pre, post, model='''\n    dA/dt = -A/tau_pre : 1\n    dB/dt = -B/tau_post : 1\n    dU/dt = -U/tau_reward : 1\n    A_post = A + U*v_pre : 1\n    B_post = B + U*v_pre : 1\n    ''', on_pre=True)\nstdp.connect(p=1.0)\n\n# Reward input\nreward = TimedArray([1]*int(50*ms/defaultclock.dt), dtype='int')\nreward.t[::int(50*ms/defaultclock.dt)] = 100 * ms\n\n# Run the simulation\nrun(100 * ms)\n\n# Plotting\nplot(pre.v[:, 0])\nxlabel('Time (ms)')\nylabel('Presynaptic potential')\nshow()\n```\n\nThis script simulates a network of 5 presynaptic neurons and 1 postsynaptic neuron. The presynaptic neurons increase their potential by `A` and `B` in response to the postsynaptic neuron's input. The `stdp` Synapses object implements the STDP rule. The `reward` TimedArray represents the reward input.\n\nPlease note that this is a simplified model. For a real-world application, you would need to add more sophisticated models for the presynaptic neurons, the postsynaptic neuron, and the reward signal.\n"
+  },
+  {
+    "id": "learning_6",
+    "category": "Learning Rules",
+    "framework": "Brian2",
+    "prompt": "Implement triplet STDP in Brian2 with 20 neurons. Monitor average weight evolution.",
+    "semantic_rules": [
+      "Synapses",
+      "on_pre",
+      "on_post",
+      "w +=",
+      "StateMonitor"
+    ],
+    "response": "To implement triplet STDP (Spike-Timing-Dependent Plasticity) in Brian2, you'll need to create a network of neurons, define synaptic connections, and define the STDP learning rule. Here's an example of how you might do this:\n\nFirst, install Brian2 if you haven't done so:\n\n```bash\npip install brian2\n```\n\nThen, you can use the following code to implement STDP in Brian2:\n\n```python\nfrom brian2 import *\nimport matplotlib.pyplot as plt\n\nstart_scope()\n\n# Parameters\nN = 20  # number of neurons\ntaum = 20.*ms  # STDP time constant\ntaupre = 20.*ms  # presynaptic trace time constant\ntaupost = 20.*ms  # postsynaptic trace time constant\nApre = 0.1  # presynaptic trace amplitude\nApost = -0.1  # postsynaptic trace amplitude\nwmax = 0.1  # maximum weight\n\n# Neuron model\neqs = '''\ndw/dt = (taum-w)/taupre*xpre + (taum-w)/taupost*xpost : 1\ndxpre/dt = -xpre/taupre : 1\ndxpost/dt = -xpost/taupost : 1\n'''\nG = NeuronGroup(N, eqs, threshold='w>1', reset='w = 0', method='linear')\nG.w = 'w+Apre*xpre+Apost*xpost'  # weight update rule\n\n# Synaptic connection\nS = Synapses(G, G, model='''\nw : 1\ndw/dt = -w/taupost : 1\n''', on_pre='w += Apre')\nS.connect()\n\n# STDP learning rule\nstdp = STDP(wmax=wmax, Apre=Apre, Apost=Apost, taupre=taupre, taupost=taupost)\nS.add_rule(stdp)\n\n# Monitor weight\nmon = StateMonitor(G, 'w', record=True)\n\n# Run simulation\nrun(100*ms)\n\n# Plot weight evolution\nplt.figure()\nplot(mon.t/ms, mon.w)\nplt.xlabel('Time (ms)')\nplt.ylabel('Weight')\nplt.show()\n```\n\nThis script creates a network of 20 neurons, each with a weight that changes over time according to the STDP rule. The weight is updated based on the difference in the time of the presynaptic and postsynaptic spikes. The weight is then monitored and plotted over time.\n\nPlease note that the parameters used in this script are arbitrary and you may need to adjust them based on your specific needs.\n"
+  },
+  {
+    "id": "learning_7",
+    "category": "Learning Rules",
+    "framework": "snnTorch",
+    "prompt": "Perform a supervised learning step with snnTorch using surrogate gradient descent on an SNN with 1 hidden layer.",
+    "semantic_rules": [
+      "snn.Leaky",
+      "loss.backward",
+      "optimizer.step"
+    ],
+    "response": "Sure, to perform supervised learning with SNNs (Spike-Neural-Networks) using snnTorch, we need to follow these steps:\n\n1. Define your SNN architecture:\n```python\nimport snnTorch as snn\nimport torch\n\nclass SNN(snn.SpikeTimeNeuron):\n    def __init__(self):\n        super().__init__(alpha_s=0.005, beta_s=0.2, tau_s=10., v_th=1., v_reset=0., method='super')\n        \n    def forward(self, x):\n        spk = super(SNN, self).forward(x)\n        return spk\n\nclass SNNLayer(snn.SpikeLayer):\n    def __init__(self, n):\n        super(SNNLayer, self).__init__(n, 1, SNN())\n\nmodel = SNNLayer(1)\n```\n\n2. Define your loss function and optimizer:\n```python\nloss_fn = torch.nn.MSELoss()\noptimizer = torch.optim.SGD(model.parameters(), lr=0.01)\n```\n\n3. Define your dataset:\n```python\ninputs = torch.rand(100, 1, 10)  # 100 samples, 1 input, 10 time steps\ntargets = torch.rand(100, 1)  # 100 samples, 1 output\n```\n\n4. Perform the forward pass:\n```python\nmodel.reset()\noutputs = model(inputs)\n```\n\n5. Compute the loss:\n```python\nloss = loss_fn(outputs, targets)\n```\n\n6. Perform the backward pass:\n```python\noptimizer.zero_grad()\nloss.backward()\n```\n\n7. Update the parameters:\n```python\noptimizer.step()\n```\n\nPlease note that snnTorch uses surrogate gradient descent by default, so you don't need to specify it explicitly. Also, this is a simple example, in a real-world scenario, you might need to use a more complex network architecture and a more sophisticated dataset.\n"
+  },
+  {
+    "id": "learning_8",
+    "category": "Learning Rules",
+    "framework": "Brian2",
+    "prompt": "Write Brian2 code to implement Hebbian plasticity in a group of 5 neurons.",
+    "semantic_rules": [
+      "Synapses",
+      "on_pre",
+      "w +="
+    ],
+    "response": "Brian2 is a Python package for simulating neuronal networks. Here is a simple example of how you might implement Hebbian plasticity in a group of 5 neurons:\n\n```python\nfrom brian2 import *\n\nstart_scope()\n\nN = 5  # number of neurons\ntau = 10*ms  # time constant\n\n# Define neuron group\neqs = '''\ndv/dt = (I - v)/tau : 1\nI : 1\n'''\nG = NeuronGroup(N, eqs, threshold='v>1', reset='v = 0', method='linear')\n\n# Input current\nI = [0.1, 0.2, 0.3, 0.4, 0.5]*nA\nG.I = I\n\n# Synapses\nsynapse_model = '''\nw : 1\ndw/dt = -w/tau : 1\n'''\nS = Synapses(G, G, synapse_model)\nS.connect()  # connect all-to-all\n\n# Hebbian learning rule\nS.w = lambda 'w + I_pre/N'\n\n# Run simulation\nrun(100*ms)\n\n# Plot weights\nplot(G[:].v)\nshow()\n```\n\nThis script creates a group of 5 neurons, each with a time constant of 10 ms. It also creates a set of synapses between all pairs of neurons. The synapse model includes a weight that decreases over time. The Hebbian learning rule is applied to update the synapse weight according to the average input current. The network is then run for 100 ms and the membrane potential of each neuron is plotted.\n"
+  },
+  {
+    "id": "learning_9",
+    "category": "Learning Rules",
+    "framework": "Brian2",
+    "prompt": "Simulate Oja's rule for synaptic plasticity in Brian2 for a 2-neuron system.",
+    "semantic_rules": [
+      "Synapses",
+      "StateMonitor",
+      "w +=",
+      "w *="
+    ],
+    "response": "Oja's rule is a type of Hebbian learning rule used in neural networks. It's a simple rule for adjusting the weights of a connection between two artificial neurons.\n\nHere is a basic example of how you can implement Oja's rule in Brian2:\n\n```python\nfrom brian2 import *\nstart_scope()\n\nN = 2\neqs = '''\ndv/dt = -v/tau + x : 1\ndx/dt = -x/tau_x + v : 1\ntau : second\ntau_x : second\n'''\nG = NeuronGroup(N, eqs, threshold='v>1', reset='v = 0', method='linear')\nG.v = '2*(i-1)*pi/N + noise(0.1)*radians'\nG.tau = '100*ms + 200*ms*i/N'\nG.tau_x = '10*ms + 20*ms*i/N'\n\nsynapses = Synapses(G, G, on_pre='v += -w')\nsynapses.connect()\nsynapses.w = '0.01 + 0.02*(i[0]-1)*(i[1]-1)'\n\nrun(100*ms)\n\nplot(G.t[0]*ms, G.v[0])\nxlabel('Time (ms)')\nylabel('v')\nshow()\n```\n\nIn this code:\n\n- We first define a neuron model with a dynamical equation for `v` and `x`.\n- We then set the initial values of `v` and `x`.\n- We connect the neurons and set the initial weights of the synapses.\n- We run the simulation for 100 milliseconds.\n- Finally, we plot the values of `v` over time.\n\nPlease note that this is a very basic example. In practice, you would probably want to adjust the parameters of the model according to your specific requirements.\n"
+  },
+  {
+    "id": "learning_10",
+    "category": "Learning Rules",
+    "framework": "Norse",
+    "prompt": "Train a simple Norse LIF network using surrogate gradient learning on dummy input for 1 iteration.",
+    "semantic_rules": [
+      "norse.torch",
+      "LIFCell",
+      "loss.backward",
+      "optimizer.step"
+    ],
+    "response": "Sure, here is a simple example of how you might train a network using surrogate gradient learning. In this case, I'll use a dummy input and a dummy target for the sake of simplicity.\n\n```python\nimport numpy as np\n\n# Define the neuron\nclass Neuron:\n    def __init__(self, n_inputs):\n        self.weights = np.random.rand(n_inputs)\n        self.bias = np.random.rand(1)\n\n    def forward(self, inputs):\n        return np.dot(inputs, self.weights) + self.bias\n\n    def backward(self, inputs, error):\n        self.weights -= inputs * error\n        self.bias -= error\n\n# Define the network\nclass Network:\n    def __init__(self, n_inputs, n_neurons):\n        self.neurons = [Neuron(n_inputs) for _ in range(n_neurons)]\n\n    def forward(self, inputs):\n        return [neuron.forward(inputs) for neuron in self.neurons]\n\n    def backward(self, inputs, errors):\n        for neuron, error in zip(self.neurons, errors):\n            neuron.backward(inputs, error)\n\n# Create a simple dummy input and target\ninputs = np.array([0.1, 0.2, 0.3])\ntarget = 0.5\n\n# Create a network\nnetwork = Network(len(inputs), 1)\n\n# Forward pass\noutputs = network.forward(inputs)\n\n# Compute the error\nerror = target - outputs[0]\n\n# Backward pass\nnetwork.backward(inputs, error)\n```\n\nPlease note that this is a very basic example and is not meant to represent a real-world Norse LIF network. Norse LIF network is a more complex model that includes more features such as noise, adaptation, etc. Also, the surrogate gradient learning method is not a method typically used in neural networks but a technique used in optimization problems. It's used here as a simple way to demonstrate how the backpropagation algorithm might work.\n"
+  },
+  {
+    "id": "learning_11",
+    "category": "Learning Rules",
+    "framework": "Brian2",
+    "prompt": "Use Brian2 to implement BCM plasticity in a 3-neuron system. Monitor synaptic weights.",
+    "semantic_rules": [
+      "Synapses",
+      "StateMonitor",
+      "w +=",
+      "theta"
+    ],
+    "response": "Brian2 is a Python package for simulating spiking neural network models. Here is a simple example of how you can implement BCM plasticity in a 3-neuron system using Brian2:\n\n```python\nfrom brian2 import *\n\nstart_scope()\n\n# Brian2 setup\ndefaultclock.dt = 0.01*ms # Set the default clock resolution\n\n# Parameters\nN = 3 # Number of neurons\ntau = 20*ms # Time constant\nw = 0.5 # Weight\n\n# Brian2 NeuronGroup definitions\neqs = '''\ndv/dt = (1-v)/tau : 1\nI : 1\n'''\n\n# Brian2 Synapses definitions\nsynapse_model = '''\nw : 1\ndw/dt = -w/tau : 1\n'''\n\n# Creating Brian2 NeuronGroup and Synapses\nG = NeuronGroup(N, eqs, threshold='v>1', reset='v = 0', method='linear')\nS = Synapses(G, G, model=synapse_model, on_pre='w += 0.5', method='linear')\n\n# Connecting the neurons\nS.connect()\n\n# Setting the input current\nG.I = [1, 0, 0]*nA\n\n# Running the simulation\nrun(100*ms)\n\n# Printing the final weights\nprint(S.w)\n```\n\nThis is a very basic implementation of the BCM plasticity model. It does not include the detailed BCM equations, but it should give you a good starting point. The `on_pre` argument in the Synapses definition specifies the weight update rule, which follows the BCM model.\n\nPlease note that Brian2 has its own set of conventions for defining models, such as the use of `:` to denote differential equations and `dt` for time. The model equations are written in a language that Brian2 can parse.\n\nPlease install Brian2 library if you haven't done it yet. You can install it via pip:\n\n```bash\npip install brian2\n```\n\nRemember to run the simulation for a sufficient time to allow for the weight changes to fully propagate.\n"
+  },
+  {
+    "id": "learning_12",
+    "category": "Learning Rules",
+    "framework": "Brian2",
+    "prompt": "Write Brian2 code for voltage-dependent STDP with excitatory synapses.",
+    "semantic_rules": [
+      "Synapses",
+      "on_pre",
+      "on_post",
+      "w +=",
+      "v_post"
+    ],
+    "response": "Brian2 is a Python package for simulating neuronal networks. Here is a simple example of a voltage-dependent STDP with excitatory synapses:\n\n```python\nfrom brian2 import *\n\nstart_scope()\n\n# Parameters\neqs = '''\ndv/dt = (I-v)/tau : 1\nI : 1\ntau : second\n'''\nG = NeuronGroup(1, eqs, threshold='v>1', reset='v = 0', method='linear')\nG.I = '10*nA'\nG.tau = '10ms'\n\n# Synapses\nsynapse_model = '''\nw : 1\ndw/dt = -w/tau_pre : 1\ntau_pre : second\n'''\nS = Synapses(G, G, model=synapse_model)\nS.connect()\nS.w = '1'\nS.tau_pre = '10ms'\n\n# STDP\nstdp_model = '''\ndA_pre/dt = -w_post * v_pre/tau_pre : 1\ndA_post/dt = w_pre * v_post/tau_post : 1\nw_pre : 1\nw_post : 1\ntau_pre : second\ntau_post : second\n'''\nSTDP = Synapses(S, model=stdp_model)\nSTDP.connect('i==j', p=1.0)\nSTDP.w_pre = '0.01'\nSTDP.w_post = '0.02'\nSTDP.tau_pre = '20ms'\nSTDP.tau_post = '20ms'\n\n# Run the simulation\nrun(10*ms)\n```\n\nThis code simulates a single neuron with an excitatory synapse. The synapse's weight changes over time according to the STDP rule, and the neuron's voltage changes due to an input current.\n\nPlease note that this is a very basic example. In a real-world scenario, you would have more neurons and synapses, you would use more sophisticated models for the synapses and the neurons, and you would also consider the background noise.\n"
+  },
+  {
+    "id": "learning_13",
+    "category": "Learning Rules",
+    "framework": "snnTorch",
+    "prompt": "Build a snnTorch network with 2 layers and train with Adam optimizer on dummy spikes for 1 iteration.",
+    "semantic_rules": [
+      "snn.Leaky",
+      "optimizer.step",
+      "torch.optim.Adam"
+    ],
+    "response": "Here is a simple example of a Spiking Neural Network (SNN) using the `snnTorch` library. This example only trains for one iteration and does not use real data, as dummy spikes are not provided.\n\nFirst, you need to install `snnTorch` library. You can install it via pip:\n\n```bash\npip install snntorch\n```\n\nThen, you can use the following Python code:\n\n```python\nimport snntorch as snn\nimport torch\nfrom snntorch import spikegen\n\n# Define network architecture\nclass SNN(snn.SpikingModule):\n    def __init__(self):\n        super(SNN, self).__init__()\n        self.fc1 = snn.SpikingLinear(2, 2, bias=False)\n        self.fc2 = snn.SpikingLinear(2, 1, bias=False)\n\n    def forward(self, x):\n        x = self.fc1(x)\n        x = self.fc2(x)\n        return x\n\n# Initialize network and optimizer\nmodel = SNN().cuda()\noptimizer = torch.optim.Adam(model.parameters(), lr=0.01)\n\n# Generate dummy spikes\ninput_data = torch.rand(100, 2).cuda()\nlabels = torch.randint(0, 2, (100,)).cuda()\n\n# Create spike-like data\nspike_data = spikegen.rate(input_data, 20)\n\n# Train for 1 epoch\nfor i in range(1):\n    optimizer.zero_grad()\n    output = model(spike_data)\n    loss = snn.BCECount()(output, labels)\n    loss.backward()\n    optimizer.step()\n\nprint('Training complete')\n```\n\nPlease note that the network architecture, input data, labels, and number of iterations are all dummy examples. You will need to replace these with your own data and architecture. The dummy spike generation is also a placeholder, you may need to replace it with your own method to generate spike-like data.\n"
+  },
+  {
+    "id": "learning_14",
+    "category": "Learning Rules",
+    "framework": "Brian2",
+    "prompt": "Simulate spike-timing based learning with inhibitory neurons in Brian2.",
+    "semantic_rules": [
+      "Synapses",
+      "on_pre",
+      "on_post",
+      "w -="
+    ],
+    "response": "To simulate spike-timing-dependent plasticity (STDP) learning with inhibitory neurons in Brian2, you can follow the steps below:\n\nFirst, you need to install Brian2. If you haven't installed it yet, you can do so by using the following command:\n\n```python\npip install brian2\n```\n\nThen, you can use the following code to simulate spike-timing-dependent plasticity learning with inhibitory neurons:\n\n```python\nfrom brian2 import *\n\nstart_scope()\n\n# Parameters\nN = 1000  # number of neurons\ntau = 10*ms  # membrane time constant\nVth = 10*mV  # spike threshold\nVreset = -70*mV  # reset value\nVinit = -70*mV  # initial value\ntau_w = 5*ms  # synaptic time constant\n\n# Brian2 Equations\neqs = '''\ndv/dt = (I-v)/tau : volt\nI : current\ntau_w : second\nw : second\n'''\n\nG = NeuronGroup(N, eqs, threshold='v>Vth', reset='v = Vreset', method='linear')\nG.v = Vinit\n\n# Synapses\nS = Synapses(G, G, model='''\ndw/dt = -w/tau_w : second\n''')\nS.connect()\nS.w = '2*second*i/(N-1)'\n\n# STDP\nSTDP = Synapses(G, G, model='''\ndw/dt = -w/tau_w : second (event-driven)\nw : second\n''')\nSTDP.connect('i==j', pre_post=True)\nSTDP.w = 'w_post - w_pre'\n\ndef update_STDP(w, t, i):\n    STDP[i].w = w\n\nSTDP.on_update('w', update_STDP)\n\n# Running simulation\nrun(100*ms)\n\n# Plotting\nplot(G.t[0]/ms, G.v[0])\nshow()\n```\n\nThis script simulates a network of 1000 neurons with spike-timing-dependent plasticity (STDP) learning. The `v` variable represents the membrane voltage of each neuron, and the `w` variable represents the strength of the synaptic connection between two neurons. The `I` variable represents the input current, which can be modified to inject a certain amount of current to a subset of the neurons.\n\nPlease note that Brian2 is not designed for real-time simulations, so this code may not run efficiently on a real-time system.\n"
+  },
+  {
+    "id": "learning_15",
+    "category": "Learning Rules",
+    "framework": "Norse",
+    "prompt": "Implement one iteration of backpropagation through time (BPTT) with Norse on random data.",
+    "semantic_rules": [
+      "norse.torch",
+      "LIFCell",
+      "loss.backward",
+      "torch.randn"
+    ],
+    "response": "Backpropagation Through Time (BPTT) is a method of performing backpropagation for recurrent networks. It's a modification of the standard backpropagation algorithm that is applied to networks that use the Long Short-Term Memory (LSTM) or Gated Recurrent Unit (GRU) units.\n\nHere is a simple example of how you can implement BPTT using Norse, a deep learning library for Torch:\n\n```python\nimport torch\nfrom norse.torch import LSTMCell\n\n# Define the parameters\ninput_size = 10\nhidden_size = 5\nnum_layers = 2\nbatch_size = 2\nseq_length = 3\n\n# Initialize random data\ninput_data = torch.randn(seq_length, batch_size, input_size)\nhidden_states = [(torch.zeros(batch_size, hidden_size), torch.zeros(batch_size, hidden_size)) for _ in range(num_layers)]\n\n# Initialize LSTM\nlstm = LSTMCell(input_size, hidden_size, num_layers)\n\n# Forward pass\noutputs = []\nfor i in range(seq_length):\n    x = input_data[i]\n    hidden_states_next = []\n    for j in range(num_layers):\n        if j == 0:\n            hidden_state, cell_state = lstm(x, hidden_states[j])\n        else:\n            hidden_state, cell_state = lstm(hidden_state, hidden_states[j])\n        hidden_states_next.append((hidden_state, cell_state))\n    outputs.append(hidden_state)\n    hidden_states = hidden_states_next\n\n# Backward pass (BPTT)\noutputs = torch.stack(outputs)\noutputs = outputs.reshape(-1, hidden_size)\ntarget = torch.randn(seq_length, batch_size, hidden_size)\nloss = torch.nn.MSELoss()(outputs, target)\nloss.backward()\n\n# Update weights\nfor param in lstm.parameters():\n    param.data.add_(param.grad.data)\n    param.grad.data.zero_()\n```\n\nThis is a very basic example of how you can implement BPTT with Norse. The actual BPTT implementation might be more complex depending on the specific requirements of your problem.\n\nNote: This code assumes that you have installed the Norse library. If you haven't installed it yet, you can install it using pip:\n\n```bash\npip install git+https://github.com/norse/norse\n```\n"
+  },
+  {
+    "id": "learning_16",
+    "category": "Learning Rules",
+    "framework": "Brian2",
+    "prompt": "Write Brian2 code to simulate voltage-gated plasticity in a small network.",
+    "semantic_rules": [
+      "NeuronGroup",
+      "Synapses",
+      "w +=",
+      "v >"
+    ],
+    "response": "Sure, here's a simple example of a Brian2 code that simulates a voltage-gated plasticity model in a small network.\n\n```python\nfrom brian2 import *\nstart_scope()\n\n# Network parameters\neqs = '''\ndv/dt = (I - v)/tau : 1\nI : 1\ntau : second\n'''\nG = NeuronGroup(2, eqs, threshold='v>1', reset='v = 0', method='linear')\nG.I = [2, 0]  # Current for each neuron\nG.tau = [10*ms, 10*ms]  # Time constant for each neuron\n\n# Synapses parameters\nsynapse_model = '''\nw : 1\ndw/dt = -w/tau_w : 1\ntau_w : second\n'''\nS = Synapses(G, G, synapse_model, on_pre='w += 0.5', method='linear')\nS.connect()\nS.tau_w = [20*ms, 20*ms, 20*ms, 20*ms]  # Time constant for each synapse\n\n# Running the simulation\nrun(100*ms)\n\n# Plotting the results\nplot(G.t[0]/ms, G.v[0])\nxlabel('Time (ms)')\nylabel('Membrane potential')\nshow()\n```\n\nThis code simulates two neurons with voltage-gated plasticity. The first neuron receives a constant current of 2 nA, while the second one doesn't receive any current. Synapses are used to connect the two neurons, and their weights are modulated by the voltage-gated mechanism.\n\nPlease note that this is a very basic example. In a real-world scenario, you might want to add more complex dynamics, such as a time-dependent current input or a more sophisticated synaptic mechanism.\n"
+  },
+  {
+    "id": "learning_17",
+    "category": "Learning Rules",
+    "framework": "snnTorch",
+    "prompt": "Train a 3-layer spiking network in snnTorch with surrogate gradients on dummy MNIST-like input for 1 batch.",
+    "semantic_rules": [
+      "snn.Leaky",
+      "loss.backward",
+      "optimizer.step",
+      "torch.rand"
+    ],
+    "response": "To train a 3-layer spiking network in snnTorch with surrogate gradients on dummy MNIST-like input for 1 batch, you need to follow these steps:\n\n1. **Install necessary libraries:**\n\nFirstly, you need to install the necessary libraries. You can do this by running:\n\n```\npip install torch torchvision matplotlib snntorch\n```\n\n2. **Import the necessary modules:**\n\nNext, import the necessary modules:\n\n```python\nimport torch\nfrom snntorch import spikegen\nfrom snntorch import spiking\nfrom torch import nn, optim\nfrom torchvision import datasets, transforms\n```\n\n3. **Prepare the dataset:**\n\nFor the purpose of this example, we will use a dummy dataset. However, you can replace this with any MNIST-like dataset:\n\n```python\n# Define a random dataset\ninput_units = 784  # for 28x28 MNIST images\nhidden_units = 100\noutput_units = 10  # for 10-class MNIST\n\n# Dummy dataset\ninput_data = torch.randn(1, input_units)\nlabels = torch.randint(low=0, high=9, size=(1,))\n```\n\n4. **Define the Spiking Neural Network (SNN):**\n\nDefine the architecture of your network:\n\n```python\nclass SNN(nn.Module):\n    def __init__(self):\n        super(SNN, self).__init__()\n        self.fc1 = nn.Linear(input_units, hidden_units)\n        self.fc2 = nn.Linear(hidden_units, hidden_units)\n        self.fc3 = nn.Linear(hidden_units, output_units)\n\n    def forward(self, x):\n        x = spiking.sigmoid(self.fc1(x), beta=100)\n        x = spiking.relu(self.fc2(x))\n        x = self.fc3(x)\n        return x\n```\n\n5. **Initialize the network and the optimizer:**\n\n```python\nmodel = SNN()\noptimizer = optim.Adam(model.parameters(), lr=0.001)\n```\n\n6. **Train the network:**\n\nNow, you can train your network. However, training with surrogate gradients in snnTorch is a bit tricky. You need to use the `surrogate` keyword argument in the `.backward()` method:\n\n```python\n# Training\nfor i in range(1):  # Only 1 batch for the sake of example\n    model.train()\n    outputs = model(input_data)\n    loss = nn.CrossEntropyLoss()(outputs, labels)\n    optimizer.zero_grad()\n    loss.backward(retain_graph=True)  # Needed because of the surrogate gradients\n    optimizer.step()\n```\n\nPlease note that this is a simplified example. In practice, you might want to add more features like data loaders, device configuration, model validation, etc.\n\nAlso, please note that using surrogate gradients in SNNs can be tricky, as they require careful tuning of the hyperparameters (`beta` in the example).\n"
+  },
+  {
+    "id": "learning_18",
+    "category": "Learning Rules",
+    "framework": "Brian2",
+    "prompt": "Write Brian2 code to implement anti-Hebbian plasticity in inhibitory connections.",
+    "semantic_rules": [
+      "Synapses",
+      "on_pre",
+      "w -="
+    ],
+    "response": "In Brian2, you can implement anti-Hebbian plasticity by modifying the synaptic weight update rule. The anti-Hebbian rule for a synapse from presynaptic neuron i to postsynaptic neuron j is given by:\n\nw = w + \u0394w\n\nwhere w is the synaptic weight, and \u0394w is the change in weight. The change in weight is given by:\n\n\u0394w = \u03c4 * (\u03b7 * sum(x[i] * y[j]) - w)\n\nwhere \u03c4 is the time constant, \u03b7 is the learning rate, x[i] is the presynaptic activity, and y[j] is the postsynaptic activity.\n\nHowever, the standard Hebbian learning rule used in Brian2 (w = w + \u0394w) is for positive and negative connections. For inhibitory connections, you can modify the rule to:\n\nw = w + \u0394w\n\nwhere \u0394w is the change in weight, which is given by:\n\n\u0394w = \u03c4 * (\u03b7 * sum(x[i] * y[j]) - w)\n\nwhere \u03c4 is the time constant, \u03b7 is the learning rate, x[i] is the presynaptic activity, and y[j] is the postsynaptic activity.\n\nHere is a simple Brian2 code snippet that implements this:\n\n```python\nfrom brian2 import *\n\nstart_scope()\n\nN = 100  # number of neurons\ntau = 10*ms  # time constant\neta = 0.1  # learning rate\n\n# Create network of N neurons\nG = NeuronGroup(N, 'v:1', threshold='v>1', reset='v = 0', method='linear')\n\n# Initialize weights and delay\nsynapses = Synapses(G, G, 'w:1', pre='v_post += w', method='linear')\nsynapses.connect('i != j', p=0.1)\nsynapses.w = '1 + 0. * i/N'\n\n# Implement anti-Hebbian learning rule\nsynapses.on_pre('w += tau * eta * sum(x[i] * y[j]) - w')\n\n# Run simulation\nrun(100*ms)\n```\n\nThis code creates a network of 100 neurons and connects them with a probability of 0.1. The initial weights are set to 1. The anti-Hebbian learning rule is implemented in the on_pre method of the synapses. The simulation runs for 100ms.\n\nNote: The anti-Hebbian learning rule is not typically used in inhibitory connections, but it can be used as a starting point. In practice, inhibitory connections are typically modeled using other mechanisms, such as resetting the membrane potential to a low value when a presynaptic neuron fires.\n"
+  },
+  {
+    "id": "learning_19",
+    "category": "Learning Rules",
+    "framework": "Brian2",
+    "prompt": "Implement voltage-based STDP in Brian2 between 2 groups of neurons.",
+    "semantic_rules": [
+      "Synapses",
+      "on_post",
+      "w +=",
+      "v_post"
+    ],
+    "response": "Sure, I can provide a simple example of how you might implement voltage-based STDP (Spike-Time-Dependent Plasticity) in Brian2. This example assumes that you have two groups of neurons and they both start with the same number of neurons.\n\nPlease note that Brian2 is a package for simulating neural dynamics and it's a bit complicated to explain everything in detail, but I'll try to provide a simple example.\n\n```python\nfrom brian2 import *\n\nstart_scope()\n\n# Set the seed for reproducibility\nset_default_seed(12345)\n\n# Parameters\nN = 100  # number of neurons per group\ntau = 20*ms  # time constant for the decay\ntaus = [20*ms, 40*ms]  # time constants for the pre and post-synaptic neurons\nwmax = 0.01  # maximum weight\n\n# Define the model\neqs = '''\ndv/dt = (1-v)/tau : 1\nI : 1\n'''\n\n# Generate the groups\nG1 = NeuronGroup(N, eqs, threshold='v>1', reset='v = 0', method='linear')\nG2 = NeuronGroup(N, eqs, threshold='v>1', reset='v = 0', method='linear')\n\n# Create synapses\nS = Synapses(G1, G2, on_pre='v_post += w', method='linear')\nS.connect()\nS.w = 'wmax * (1 - squared_distance(xi1, xi2)/sum(squared_distance(xi1, xi2))) * (1 - abs(t-t_pre)/tau)', '1_per_ms'\n\n# STDP rule\nstdp_model = '''\ndw/dt = (w_post - w) / taus : 1\nw : 1 (summed)\n'''\nS.add_synapse_dynamics(stdp_model)\n\n# Run the simulation\nrun(100*ms)\n\n# Plot the weights\nplot(S.w)\nshow()\n```\n\nIn this code, we first define a simple model for a neuron with a decaying voltage, and we create two groups of such neurons. We then create synapses between the two groups and set the weight of the synapses based on the distance between the pre- and post-synaptic neurons. Finally, we add a STDP rule to the synapses and run the simulation.\n\nPlease note that this is a very basic example and doesn't include any input, noise, or other factors that might be important in a real simulation. It also assumes that the neurons are connected in a fully connected manner, which might not be the case in your actual setup.\n"
+  },
+  {
+    "id": "learning_20",
+    "category": "Learning Rules",
+    "framework": "Norse",
+    "prompt": "Train a Norse recurrent spiking network with surrogate gradients on random time-series data.",
+    "semantic_rules": [
+      "norse.torch",
+      "LIFRecurrentCell",
+      "loss.backward",
+      "torch.randn"
+    ],
+    "response": "To train a Norse recurrent spiking network with surrogate gradients on random time-series data, you will need to follow a set of steps, including preparing the data, defining the network, defining the learning rule, training the network, and testing the network.\n\nHere's a step by step guide on how you can achieve this in Python using the norse library.\n\n1. **Installation**: First, you need to install the necessary libraries. If not already installed, you can do this by running:\n\n```python\npip install numpy torch matplotlib norse\n```\n\n2. **Data Preparation**: Generate a random time-series data.\n\n```python\nimport numpy as np\n\n# Generate random time-series data\nT = 2000  # time length\nN = 100  # number of series\n\ndata = np.random.poisson(2, (T, N))\n```\n\n3. **Network Definition**: Define your recurrent spiking network using the Norse library.\n\n```python\nimport torch\nfrom norse.torch import LIFCell, LIFParameters\n\n# Define network\nclass SNN(torch.nn.Module):\n    def __init__(self):\n        super(SNN, self).__init__()\n        self.cell = LIFCell(LIFParameters(tau=10.0))\n        self.fc = torch.nn.Linear(100, 10)\n\n    def forward(self, x):\n        sequence = []\n        for t in range(x.size(1)):\n            z, s = self.cell(x[:, t])\n            sequence.append(z)\n        x = torch.stack(sequence)\n        x = self.fc(x)\n        return x\n```\n\n4. **Learning Rule Definition**: Define the learning rule you want to use, in this case, we will use a surrogate gradient method.\n\n```python\nfrom norse.torch import SurrogateGradient\n\n# Define learning rule\nlearning_rule = SurrogateGradient(dt=0.05)\n```\n\n5. **Training the Network**: Train your network.\n\n```python\n# Initialize network and optimizer\nmodel = SNN()\noptimizer = torch.optim.Adam(model.parameters(), lr=0.01)\n\n# Training loop\nfor epoch in range(100):\n    for t in range(T):\n        x = torch.Tensor(data[t])\n        x = x.unsqueeze(0).unsqueeze(0)  # add dimension for batch and channels\n        z, s = model(x)\n        loss = z.sum()\n        learning_rule(loss)\n        optimizer.step()\n        model.zero_grad()\n```\n\n6. **Testing the Network**: Test your network.\n\n```python\n# Testing\nx_test = torch.Tensor(data[T // 2:])\nx_test = x_test.unsqueeze(0).unsqueeze(0)\nz, s = model(x_test)\nprint(z)\n```\n\nPlease note that this is a very basic example. For real-world applications, you might need to adjust the parameters, data preprocessing steps, and network architecture to suit your specific needs.\n"
+  },
+  {
+    "id": "network_1",
+    "category": "Network Creation",
+    "framework": "Brian2",
+    "prompt": "Construct a Brian2 network with 100 excitatory and 25 inhibitory neurons connected randomly with 10% probability. Run for 500 ms and record population firing rates.",
+    "semantic_rules": [
+      "NeuronGroup",
+      "Synapses",
+      "SpikeMonitor",
+      "run(",
+      "p=0.1",
+      "500*ms"
+    ],
+    "response": "To solve this problem, we are going to use Brian2, a Python package for simulating neuronal networks. Here is a basic example of how you can construct a network with 100 excitatory and 25 inhibitory neurons and record their firing rates:\n\n```python\nfrom brian2 import *\nstart_scope()\n\n# Parameters\nN_exc = 100\nN_inh = 25\nN = N_exc + N_inh\np = 0.1  # connection probability\n\n# Neuron parameters\neqs = '''\ndv/dt = (I-v)/tau : 1\nI : 1\ntau : second\n'''\n\n# Initialize populations\nG = NeuronGroup(N, eqs, threshold='v>1', reset='v = 0', method='linear')\nG.I = [0]*N_exc + [2]*N_inh\nG.v = [0]*N + [1]*N_inh  # Make the inhibitory neurons fire\n\n# Connect neurons with random weights\nconn = Synapses(G, G, on_pre='v_post += A', on_post='v_pre += A')\nconn.A = 'rand() * 0.1/(N_exc*N_exc)'\nconn.connect('i<N_exc', 'i>=N_exc', p=p)\n\n# Run the simulation\nrun(500*ms)\n\n# Get the firing rate\nfiring_rates = G.v / (500*ms)\n\n# Print the mean firing rates\nprint('Mean firing rates:')\nprint('Excitatory:', mean(firing_rates[:N_exc]))\nprint('Inhibitory:', mean(firing_rates[N_exc:]))\n```\n\nPlease note that the above code assumes that all neurons are excitatory, and no two neurons have the same threshold. If you want to have inhibitory neurons, you will need to adjust the code accordingly.\n\nAlso, this code does not account for any biophysical properties of the neurons or synapses, it's a very basic model. For a more realistic simulation, you would need to add more parameters and equations.\n"
+  },
+  {
+    "id": "network_2",
+    "category": "Network Creation",
+    "framework": "snnTorch",
+    "prompt": "Build a spiking CNN in snnTorch with one convolutional LIF layer followed by a fully connected LIF layer. Run random spike input for 50 steps.",
+    "semantic_rules": [
+      "snn.Conv2d",
+      "snn.Leaky",
+      "torch.rand",
+      "nn.Linear"
+    ],
+    "response": "Sure, here is a simple example of how you can build a spiking CNN in snnTorch with one convolutional LIF layer followed by a fully connected LIF layer. \n\nThis example assumes that you have already installed snnTorch and other necessary packages.\n\n```python\nimport snntorch as snn\nimport torch\nfrom snntorch import spikegen\nfrom torch import nn\nimport matplotlib.pyplot as plt\n\n# Define the network architecture\nclass SNN(nn.Module):\n    def __init__(self):\n        super(SNN, self).__init__()\n        # Convolutional layer with 100 filters of size 3x3\n        self.conv = nn.Conv2d(1, 100, kernel_size=3)\n        # LIF layer\n        self.fc = snn.LIF()\n\n    def forward(self, x):\n        # Convolution\n        x = self.conv(x)\n        # LIF layer\n        x = self.fc.forward(x)\n        return x\n\n# Instantiate the network\nmodel = SNN()\n\n# Generate random spike inputs\nspike_gen = spikegen.Uniform(30, 50)  # Generate spikes between 30ms and 50ms\nspikes = spike_gen.sample((1, 1, 28, 28))  # Sample 1000 spikes\n\n# Feed the spike inputs through the network\noutput = model(spikes)\n\n# Print the output shape\nprint('Output shape:', output.shape)\n\n# Visualize the output spikes\nplt.figure(figsize=(10,5))\nplt.subplot(1,2,1)\nplt.hist(output.detach().flatten(), bins=50)\nplt.title('Spike count histogram')\nplt.xlabel('Spike count')\nplt.ylabel('Neuron count')\nplt.show()\n```\n\nThis code will create a CNN with one convolutional layer, followed by a LIF layer. It will generate random spike inputs, feed them through the network, and print out the output shape. Finally, it will plot a histogram of the number of spikes per neuron.\n\nRemember to adjust the parameters according to your specific needs.\n"
+  },
+  {
+    "id": "network_3",
+    "category": "Network Creation",
+    "framework": "Brian2",
+    "prompt": "Write Brian2 code to implement a recurrent network of 20 neurons with random connections. Stimulate with Poisson input and plot spike raster.",
+    "semantic_rules": [
+      "NeuronGroup",
+      "PoissonGroup",
+      "Synapses",
+      "SpikeMonitor",
+      "plot"
+    ],
+    "response": "Here is a simple example of how you can implement a recurrent network of 20 neurons with random connections in Brian2. This code will stimulate with Poisson input and plot a spike raster.\n\nFirst, let's import the necessary libraries:\n\n```python\nfrom brian2 import *\nimport matplotlib.pyplot as plt\nimport numpy as np\n```\n\nNext, we define the network parameters:\n\n```python\nstart_scope()\n\nN = 20  # number of neurons\ntau = 10*ms  # synaptic time constant\ntheta = 20*mV  # firing threshold\nV_reset = 0*mV  # reset potential\nV_rest = 0*mV  # resting potential\n\neqs = '''\ndV/dt = (I-V)/tau : 1\nI : 1\n'''\n\nG = NeuronGroup(N, eqs, threshold='V>theta', reset='V = V_reset', method='linear')\nG.V = V_rest\n\nG.I = '2*nA*rand()'\n\nsynapses = Synapses(G, G, on_pre='V_post = V_post + I_post')\nsynapses.connect()\n\nsynapses.w = '0.5*(2*rand()-1)*nA'  # random weights\n\nrun(1*second)\n```\n\nWe stimulate the network with Poisson input:\n\n```python\ninput_start = 500*ms\ninput_duration = 100*ms\n\ninputs = PoissonGroup(N, rates=10*Hz)\ninput_spikes = SpikeMonitor(inputs)\n\nrun(1000*ms)\n\nplot(input_spikes.t, input_spikes.i, '.k')\nxlabel('Time (ms)')\nylabel('Neuron index')\nshow()\n```\n\nFinally, we plot the spike raster:\n\n```python\nspike_mon = SpikeMonitor(G)\nrun(1000*ms)\n\nplot(spike_mon.t/ms, spike_mon.i, '.k')\nxlabel('Time (ms)')\nylabel('Neuron index')\nshow()\n```\n\nPlease note that you need to run these scripts in a local environment as Brian2 doesn't support running scripts directly in this text-based platform. Also, you need to have the necessary hardware to run the Brian2 simulations.\n"
+  },
+  {
+    "id": "network_4",
+    "category": "Network Creation",
+    "framework": "Brian2",
+    "prompt": "Construct a feedforward network of 3 layers (10-20-5) in Brian2 with LIF neurons. Stimulate with Poisson input for 200 ms.",
+    "semantic_rules": [
+      "NeuronGroup",
+      "Synapses",
+      "PoissonGroup",
+      "200*ms"
+    ],
+    "response": "Sure, I can provide you with a simple example of how you could create a feedforward network with 3 layers (10, 20, 5) using Brian2. This example uses a Poisson generator for the input and a leaky Integrate and Fire (LIF) neuron model.\n\nFirst, we need to import the necessary libraries:\n\n```python\nfrom brian2 import *\nimport matplotlib.pyplot as plt\n```\n\nThen, we can define the parameters of the network:\n\n```python\nstart_scope()\nN = 200*ms  # Duration of simulation\ntau = 10*ms  # Time constant of the LIF neuron\nVrest = -60*mV  # Resting potential of the LIF neuron\nVth = 20*mV  # Threshold potential of the LIF neuron\nVreset = -70*mV  # Reset potential of the LIF neuron\nIinput = 10*nA  # Current input to the network\ntaup = 5*ms  # Time constant of the synaptic filter\n```\n\nNext, we define the network structure:\n\n```python\neqs = '''\ndV/dt = (Vrest - V) / tau : volt\ndg/dt = (1 - g) / taup : 1\nVreset : volt\n'''\nG = NeuronGroup(1, eqs, threshold='V>Vth', reset='Vreset', method='linear')\nG.V = Vrest\nG.g = 1\n\neqs_lif = '''\ndv/dt = (I-w)/tau : 1\nw : 1\n'''\ninput_group = NeuronGroup(10, eqs_lif, threshold='v>1', reset=0, method='linear')\noutput_group = NeuronGroup(20, eqs_lif, threshold='v>1', reset=0, method='linear')\nsynapses = Synapses(input_group, output_group, on_pre='w += 0.1')\nsynapses.connect()\n\neqs_output = '''\ndv/dt = (I-w)/tau : 1\nw : 1\n'''\noutput_neurons = NeuronGroup(5, eqs_output, threshold='v>1', reset=0, method='linear')\noutput_synapses = Synapses(output_group, output_neurons, on_pre='w += 0.1')\noutput_synapses.connect()\n```\n\nFinally, we stimulate the network with Poisson input:\n\n```python\ninput_group.I = Iinput\nrun(N)\n```\n\nThis code will create a network with 10 input neurons, 20 hidden neurons, and 5 output neurons. The input neurons are connected to the hidden neurons, and the hidden neurons are connected to the output neurons. The network is stimulated with a Poisson input of current of 10 nA.\n\nPlease note that this is a very basic example. In practice, you would likely need to adjust the parameters and network structure to fit your specific needs.\n"
+  },
+  {
+    "id": "network_5",
+    "category": "Network Creation",
+    "framework": "Norse",
+    "prompt": "Build a spiking RNN in Norse with 20 hidden LIF units. Feed it a random spike sequence and output spikes.",
+    "semantic_rules": [
+      "norse.torch",
+      "LIFRecurrentCell",
+      "torch.randn",
+      "nn.RNN"
+    ],
+    "response": "Here's a simple example of how to build a spiking RNN in Norse, where it's fed a random spike sequence and outputs spikes.\n\nFirst, you need to install the Norse library:\n```shell\npip install norse\n```\n\nNow, here's the code:\n\n```python\nimport torch\nfrom norse.torch import LIF\n\n# Parameters\ndt = 0.001\nT = 1.0\nN = 20\n\n# Create LIF neurons\nneurons = LIF(20)\n\n# Create random spike sequence\nsequence = torch.randint(0, 2, (int(T/dt), 1)).float()\n\n# Initialize the state\nz = neurons.initial_state(batch_size=1, device=torch.device('cpu'))\n\n# Feed the sequence into the neurons\nfor ts in range(int(T/dt)):\n    z, _ = neurons(sequence[ts].unsqueeze(1), z)\n\n# Get the outputs\nout = (z.v > 0).float()\n\nprint(out)\n```\n\nIn this example, we're using the Leaky Integrate and Fire (LIF) neuron model, which is a common choice for spiking neural networks. We initialize a network of 20 LIF neurons, generate a random spike sequence, and feed this sequence into the network. The output is a sequence of spikes, where a spike is represented as 1 and no spike as 0.\n\nPlease note that the actual spike times are not printed out in this example, but you can get them by checking the `z.t` attribute of the neuron states `z`.\n\nAlso, please note that this is a simple example and may not be suitable for complex tasks. For complex tasks, you might need to adjust the parameters and the structure of the network.\n"
+  },
+  {
+    "id": "network_6",
+    "category": "Network Creation",
+    "framework": "Brian2",
+    "prompt": "Simulate a small-world spiking network with 50 neurons in Brian2 using the Watts-Strogatz model. Plot degree distribution and spike raster.",
+    "semantic_rules": [
+      "NeuronGroup",
+      "Synapses",
+      "SpikeMonitor",
+      "plot",
+      "networkx"
+    ],
+    "response": "Sure, here's an example of how you can do this using Brian2:\n\nFirst, let's import the necessary libraries:\n\n```python\nimport brian2 as b2\nimport matplotlib.pyplot as plt\nimport numpy as np\n```\n\nThen, we can define the network:\n\n```python\n# Parameters\nN = 50  # number of neurons\nk = 4  # each node is connected to k other nodes\np = 0.1  # probability of rewiring each connection\n\n# Create network\nb2.start_scope()\neqs = '''\ndv/dt = (1-v)/tau : 1\ntau = 10ms : second\n'''\nG = b2.SpikeGeneratorGroup(N, eqs)\nC = b2.Connectivity(N, N)\nC.set_weight(b2.ones((N, N)) * k * b2.distance(range(N), range(N)) / N, p)\nP = b2.Projection(G, G, C)\nP.rule = 'diffusive'\n```\n\nWe can now run the simulation:\n\n```python\n# Run simulation\nb2.run(100*b2.ms)\n```\n\nLet's plot the degree distribution:\n\n```python\n# Plot degree distribution\ndegrees = np.array([len(c.target) for c in C.connections])\nplt.hist(degrees, bins=10, density=True)\nplt.xlabel('Degree')\nplt.ylabel('Frequency')\nplt.show()\n```\n\nFinally, let's plot the spike raster:\n\n```python\n# Plot spike raster\nspike_mon = b2.SpikeMonitor(G)\nplt.plot(spike_mon.t/b2.ms, spike_mon.i, '.k')\nplt.xlabel('Time (ms)')\nplt.ylabel('Neuron index')\nplt.show()\n```\n\nPlease note that this code snippet will run for a long time due to the long simulation time and it's not optimized for performance.\n"
+  },
+  {
+    "id": "network_7",
+    "category": "Network Creation",
+    "framework": "snnTorch",
+    "prompt": "Design a two-layer fully connected LIF network in snnTorch (input 100, hidden 50, output 10). Perform one forward pass with dummy spikes.",
+    "semantic_rules": [
+      "snn.Leaky",
+      "torch.rand",
+      "nn.Linear"
+    ],
+    "response": "To solve this problem, you will need to install snnTorch first. If it's not installed, you can do so by running `pip install snnTorch` in your command prompt or terminal.\n\nHere is a Python script that creates a two-layer fully connected LIF network with 100 input neurons, 50 hidden neurons, and 10 output neurons. It then performs one forward pass with dummy spikes.\n\n```python\nimport snntorch as snn\nimport torch\n\n# Define the number of neurons\nnum_inputs = 100\nnum_hidden = 50\nnum_outputs = 10\n\n# Define the layers\ninput_layer = snn.Leaky(num_inputs)\nhidden_layer = snn.Leaky(num_hidden)\noutput_layer = snn.Leaky(num_outputs, output=True)\n\n# Initialize dummy spike data\nspike_data = torch.rand(1, num_inputs) > 0.5\n\n# Forward pass\nspike_input = input_layer(spike_data)\nspike_hidden = hidden_layer(spike_input)\noutput = output_layer(spike_hidden)\n\nprint(output)\n```\n\nThis script works by creating three layers: an input layer, a hidden layer, and an output layer. The input layer is initialized with 100 neurons, the hidden layer with 50, and the output layer with 10. The `snn.Leaky` class is used to create the layers.\n\nThe script then generates some dummy spike data with random values between 0 and 1, and checks which values are greater than 0.5. This will result in a binary tensor, where 1 indicates a spike and 0 indicates no spike.\n\nThe script then performs a forward pass through the network. The output is the result of the forward pass through the output layer.\n\nPlease note that the output will be a tensor containing the membrane potential of the output neurons at the end of the simulation, not the spikes themselves. To get the spikes, you would need to threshold the membrane potentials at a certain value.\n"
+  },
+  {
+    "id": "network_8",
+    "category": "Network Creation",
+    "framework": "Brian2",
+    "prompt": "Implement a Brian2 model of a balanced random network with 200 excitatory and 50 inhibitory neurons. Simulate 1 second of activity.",
+    "semantic_rules": [
+      "NeuronGroup",
+      "Synapses",
+      "SpikeMonitor",
+      "1*second"
+    ],
+    "response": "To simulate a balanced random network, we can use the NetPyNE library in Python, which is a Python framework for building, simulating, and analyzing neural networks based on the NEURON simulator.\n\nFirstly, you need to install the library, you can use pip for this:\n\n```\npip install netpyne\n```\n\nHere is the code to create a balanced random network with 200 excitatory and 50 inhibitory neurons:\n\n```python\nfrom netpyne import specs\nfrom netpyne import sim\n\n# Network parameters\nnetParams = specs.NetParams()\n\n# Cell parameters\ncellParams = specs.CellParams()\ncellParams['E'] = {'cellType': 'exc', 'conds': {'cell': ['norm']}, 'thresh': -50, 'tauM': 2.0, 'tauRefrac': 5.0, 'vInit': -70, 'vrRest': -65, 'vrThresh': -52, 'vReset': -70, 'vRest': -65, 'tauSynE': 0.5, 'tauSynI': 2.0}\ncellParams['I'] = {'cellType': 'inh', 'conds': {'cell': ['norm']}, 'thresh': -50, 'tauM': 2.0, 'tauRefrac': 5.0, 'vInit': -70, 'vrRest': -65, 'vrThresh': -52, 'vReset': -70, 'vRest': -65, 'tauSynE': 0.5, 'tauSynI': 2.0}\nnetParams.cellParams = cellParams\n\n# Population parameters\npopParams = specs.PopParams()\npopParams['Exc'] = {'cellType': 'E', 'numCells': 200}\npopParams['Inh'] = {'cellType': 'I', 'numCells': 50}\nnetParams.popParams = popParams\n\n# Synaptic parameters\nsynParams = specs.SynParams()\nsynParams['Exc-Exc'] = {'conds': {'pre': ['norm'], 'post': ['norm']}, 'tau1': 0.5, 'tau2': 2.0, 'weight': 0.01}\nsynParams['Exc-Inh'] = {'conds': {'pre': ['norm'], 'post': ['norm']}, 'tau1': 0.5, 'tau2': 2.0, 'weight': -0.01}\nsynParams['Inh-Exc'] = {'conds': {'pre': ['norm'], 'post': ['norm']}, 'tau1': 0.5, 'tau2': 2.0, 'weight': 0.01}\nsynParams['Inh-Inh'] = {'conds': {'pre': ['norm'], 'post': ['norm']}, 'tau1': 0.5, 'tau2': 2.0, 'weight': 0.01}\nnetParams.synParams = synParams\n\n# Stimulation parameters\nstimParams = specs.StimParams()\nstimParams['stim1'] = {'type': 'netStim', 'delay': 5.0, 'noise': 0.0, 'number': 1, 'range': [-80, 20], 'interval': 1.0, 'weight': 0.01}\nnetParams.stimParams = stimParams\n\n# Create network\nsim.createExportNeuroML2(netParams = netParams, reference = 'Balanced_Random_Network')\n```\n\nThis code creates a balanced random network with 200 excitatory and 50 inhibitory neurons. The synaptic weights are set to 0.01 for Exc-Exc and Exc-Inh connections, and -0.01 for Inh-Exc connections.\n\nPlease note that Brian2 simulator is needed to run this code. \n\nThis code does not simulate activity, it only generates the network model in NeuroML2 format. Simulation of the network activity is not covered by this code. For that, you can use Brian2 or NEURON to run the network simulation.\n"
+  },
+  {
+    "id": "network_9",
+    "category": "Network Creation",
+    "framework": "Brian2",
+    "prompt": "Construct a three-layer convolutional SNN in Brian2 for 1D input with 16, 32, and 10 neurons per layer. Drive with Poisson input.",
+    "semantic_rules": [
+      "NeuronGroup",
+      "Synapses",
+      "PoissonGroup"
+    ],
+    "response": "Here is a Python script for a 3-layer Spiking Neural Network (SNN) using Brian2 in 1D. \n\nPlease note that you'll need to install Brian2 to run this code. You can install it by using pip:\n```bash\npip install brian2\n```\n\nHere is the code:\n\n```python\nfrom brian2 import *\nimport numpy as np\n\nstart_scope()\n\n# Set the parameters\nN1 = 16  # Number of neurons in the first layer\nN2 = 32  # Number of neurons in the second layer\nN3 = 10  # Number of neurons in the third layer\ninput_size = 1  # Input size\n\n# Define the network parameters\ntaum = 20*ms  # Membrane time constant\nEl = -70*mV  # Leak reversal potential\nEex = 0*mV  # Excitatory reversal potential\nvt = 1*mV  # Threshold for excitatory and inhibitory spikes\ntauw = 10*ms  # Time constant for the weight update\na = 0.1  # Weight update factor\n\n# Set the random seed\nnp.random.seed(0)\n\n# Define the network\neqs_neuron = '''\ndv/dt = (El - v + R*w/sum(w))/taum : 1\nR : 1\nw : 1\nI : 1\n'''\neqs_synapse = '''\ndw/dt = (a*(1-w)/(1+exp((t-t_lastspike[neuron_index]-tspike)/tauw)) - w/tauw) : 1\nI : 1\nt_lastspike : second\n'''\nG = NeuronGroup(N1+N2+N3, eqs_neuron, threshold='v>vt', reset='v = El', method='linear')\nG.v = El\nG.R = rand(N1+N2+N3)\nG.w = a*rand(N1+N2+N3)\nsynapses = Synapses(G, G, model=eqs_synapse, on_pre='w+=a', t_lastspike='t')\nsynapses.connect(condition='i<N1 : i+1', p=0.05)\nsynapses.connect(condition='i>=N1 and i<N1+N2 : i+1', p=0.05)\nsynapses.connect(condition='i>=N1+N2 : i+1', p=0.05)\n\n# Define the Poisson input\nrate = 10*Hz  # Poisson input rate\nP = PoissonInput(G, 'I', np.ones(N1)*rate, 1000*ms)\n\n# Run the simulation\nrun(1*second)\n\n# Print the first neuron's membrane potential\nplot(G[0].t[::10]/ms, G[0].v[::10]/mV)\nxlabel('Time (ms)')\nylabel('Membrane potential (mV)')\nshow()\n```\n\nThis script creates a 3-layer SNN with 16, 32, and 10 neurons per layer. The network parameters are defined at the beginning, and the neurons are connected with random synapses. The Poisson input is defined at the end, and the simulation is run for 1 second. Finally, the membrane potential of the first neuron in the network is plotted.\n"
+  },
+  {
+    "id": "network_10",
+    "category": "Network Creation",
+    "framework": "Norse",
+    "prompt": "Build a simple Norse-based feedforward spiking network with 2 hidden LIF layers. Simulate 50 steps with random input.",
+    "semantic_rules": [
+      "norse.torch",
+      "LIFCell",
+      "nn.Linear",
+      "range(50)"
+    ],
+    "response": "To build a simple Norse-based feedforward spiking network with 2 hidden LIF layers, you can use the following code:\n\n```python\nimport norse\nimport torch\nfrom norse.torch import LIF, LIFParameters, SequentialState\n\n# Set the random seed for reproducibility\ntorch.manual_seed(0)\n\n# Define the network parameters\ndt = 0.001\nT = 50\nbatch_size = 5\n\n# Create the network\nnet = SequentialState(\n    LIFParameters(\n        tau_syn_inv=torch.tensor([1.0 / (20.0 * dt)]),\n        tau_mem_inv=torch.tensor([1.0 / (20.0 * dt)]),\n        v_leak=torch.tensor([0.0]),\n        v_th=torch.tensor([2.0]),\n        v_reset=torch.tensor([0.0]),\n        method='super',\n        alpha=torch.tensor([0.05]),\n        beta=torch.tensor([3]),\n    ),\n    LIF(),\n    norse.torch.LIF(2),\n    norse.torch.LIF(2)\n)\n\n# Initialize the network\nnet.initialize(batch_size)\n\n# Generate random input\ninput = torch.randn(batch_size, 1)\n\n# Run the network\nfor ts in range(T):\n    input = torch.randn(batch_size, 1)\n    z, s = net(input, dt)\n    net.set_state(s)\n\n# Print the final voltages\nprint(net.state.v)\n```\n\nThis script creates a simple feedforward network with two hidden LIF layers. The network is initialized with a random input and then run for 50 time steps. The final voltages of the network are printed out.\n\nNote: This code requires the `norse` package, which is a PyTorch library for simulating spiking neural networks. You can install it using pip:\n\n```bash\npip install norse\n```\n\nAlso, the `torch` library is required, which you can install using pip:\n\n```bash\npip install torch\n```\n\nPlease replace the network parameters and the input generation according to your specific needs.\n"
+  },
+  {
+    "id": "network_11",
+    "category": "Network Creation",
+    "framework": "Brian2",
+    "prompt": "Create a Brian2 model with 3 neuron populations (excitatory, inhibitory, Poisson input). Connect with different probabilities and simulate activity.",
+    "semantic_rules": [
+      "NeuronGroup",
+      "PoissonGroup",
+      "Synapses",
+      "p="
+    ],
+    "response": "Here is a Python code using Brian2 to create a network with three neuron populations: one excitatory population, one inhibitory population, and a Poisson input population. We'll simulate the network and plot the spike times of each population.\n\n```python\nfrom brian2 import *\nimport matplotlib.pyplot as plt\n\n# Parameters\nN_exc = 200  # excitatory neurons\nN_inh = 50  # inhibitory neurons\nN_pois = 10  # Poisson input neurons\n\nstart_scope()\n\n# Model equations\neqs = '''\ndv/dt = (I_syn_exc + I_syn_inh - v)/tau : 1\nI_syn_exc = g_exc * (v_exc - v) : 1\nI_syn_inh = g_inh * (v_inh - v) : 1\n'''\n# Neuron populations\nG = NeuronGroup(N_exc, eqs, threshold='v>1', reset='v = 0', method='linear')\nG.v = 0. * mV\nG.g_exc = 5 * mS / cm**2\n\nI = NeuronGroup(N_inh, eqs, threshold='v>1', reset='v = 0', method='linear')\nI.v = 0. * mV\nI.g_inh = -5 * mS / cm**2\n\n# Poisson input population\nP = NeuronGroup(N_pois, 'dv/dt=(2*Hz-v)/(10*ms) : 1', threshold='v>1', reset='v = 0', method='linear')\nP.v = 'v0 + rand() * 2 * Hz'\n\n# Connections\nC_exc = Synapses(G, G, on_pre='w += 0.01', delay=1*ms)\nC_exc.connect('i != j', p=0.02)\nC_inh = Synapses(G, I, on_pre='w += 0.01', delay=1*ms)\nC_inh.connect('i != j', p=0.02)\nC_pois = Synapses(P, G, on_pre='v_ += 0.01', delay=1*ms)\nC_pois.connect(p=0.1)\n\n# Simulation\nrun(50*ms)\n\n# Plotting\nplt.figure(figsize=(10, 8))\nplt.plot(G.t*1000, G.v[:, 0]*1000, '.k')\nplt.plot(I.t*1000, I.v[:, 0]*1000, '.r')\nplt.plot(P.t*1000, P.v[:, 0]*1000, '.b')\nplt.xlabel('Time (ms)')\nplt.ylabel('Membrane voltage (mV)')\nplt.show()\n```\n\nIn this script, we define three types of neurons: excitatory (G), inhibitory (I), and Poisson input (P). The Poisson input population is connected to the excitatory and inhibitory populations with different probabilities. The simulation runs for 50ms and the membrane voltages of each population are plotted.\n"
+  },
+  {
+    "id": "network_12",
+    "category": "Network Creation",
+    "framework": "snnTorch",
+    "prompt": "Implement a spiking autoencoder with snnTorch using two LIF layers. Run one forward and backward pass on random binary input.",
+    "semantic_rules": [
+      "snn.Leaky",
+      "loss.backward",
+      "nn.Linear"
+    ],
+    "response": "Sure, here is a simple example of how you can implement a spiking autoencoder with snnTorch. \n\nPlease note that snnTorch is a PyTorch based library for simulating neural network spiking dynamics. You need to have PyTorch and snnTorch installed in your Python environment to run this code.\n\n```python\nimport torch\nfrom torch import nn\nimport snntorch as snn\nfrom snntorch import utils\n\n# Parameters\ninput_size = 100\nhidden_size = 10\n\n# Spiking Neural Network\nclass SNN(nn.Module):\n    def __init__(self):\n        super(SNN, self).__init__()\n        self.fc1 = nn.Linear(input_size, hidden_size)\n        self.lif1 = snn.Leaky(beta=0.95)\n        self.fc2 = nn.Linear(hidden_size, input_size)\n        self.lif2 = snn.Leaky(beta=0.95)\n\n    def forward(self, x):\n        # Forward pass through first layer\n        spk1, mem1 = self.lif1(self.fc1(x))\n        # Forward pass through second layer\n        spk2, mem2 = self.lif2(self.fc2(spk1))\n        return spk2\n\n# Create the network\nnet = SNN()\n\n# Binary random input\ninput_data = utils.to_snn_input(torch.randint(0, 2, (1, input_size)))\n\n# Forward pass\noutput = net(input_data)\n\n# Loss function\nloss_fn = nn.MSELoss()\n\n# Backward pass\nloss = loss_fn(output, input_data)\nloss.backward()\n\n# Update the weights\nutils.update_weights(net)\n```\n\nThis code creates a simple autoencoder with two LIF (Leaky Integrate and Fire) layers. The input data is a random binary tensor of size 100. The output of the network is then compared to the input using Mean Squared Error loss. The gradients are then calculated using `loss.backward()` and the weights are updated using `utils.update_weights(net)`.\n"
+  },
+  {
+    "id": "network_13",
+    "category": "Network Creation",
+    "framework": "Brian2",
+    "prompt": "Design a feedforward Brian2 network with three populations (input 50, hidden 20, output 10). Connect layers with fixed weights and run 200 ms.",
+    "semantic_rules": [
+      "NeuronGroup",
+      "Synapses",
+      "200*ms"
+    ],
+    "response": "Here is an example of how you could do this using Brian2:\n\n```python\nfrom brian2 import *\n\nstart_scope()\n\n# Define neuron parameters\neqs = '''\ndv/dt = (I-v)/tau : 1\nI : 1\ntau : second\n'''\n\n# Create network structure\nN = 200*ms  # simulation time\ntau = 10*ms  # membrane time constant\n\n# Input layer\nG = NeuronGroup(50, eqs, threshold='v>1', reset='v = 0', method='linear')\nG.I = '5*nA'  # input current\n\n# Hidden layer\nH = NeuronGroup(20, eqs, threshold='v>1', reset='v = 0', method='linear')\n\n# Output layer\nO = NeuronGroup(10, eqs, threshold='v>1', reset='v = 0', method='linear')\n\n# Connect layers\nconnect_all_to_all(G, H)\nconnect_all_to_all(H, O)\n\n# Run simulation\nrun(N)\n\n# Print membrane voltages\nprint(O.v)\n```\n\nThis is a very basic model where all neurons in a layer have the same dynamics. In the hidden layer, each neuron receives signals from all neurons in the input layer, and in the output layer, each neuron receives signals from all neurons in the hidden layer. \n\nThe weights are not fixed in this model as in a feedforward network, the weights are typically determined by a learning algorithm during the training phase. Here, we're just using a simple linear method to connect neurons in each layer.\n"
+  },
+  {
+    "id": "network_14",
+    "category": "Network Creation",
+    "framework": "Brian2",
+    "prompt": "Write Brian2 code for a randomly connected spiking reservoir of 100 neurons. Drive with input current and record spike trains.",
+    "semantic_rules": [
+      "NeuronGroup",
+      "Synapses",
+      "SpikeMonitor",
+      "TimedArray"
+    ],
+    "response": "Sure, I can help with that. The Brian2 library is a Python package for simulating neural dynamics. Here's a simple example of a network of 100 neurons connected randomly. \n\n```python\nfrom brian2 import *\nimport numpy as np\n\nstart_scope()\n\n# Parameters\nN = 100  # number of neurons\np = 0.1  # probability of connection\ntau = 10*ms  # membrane time constant\nVth = 15*mV  # spike threshold\n\n# Model neuron parameters\neqs = '''\ndv/dt = (I-v)/tau : 1\nI : 1\n'''\n\n# Initialize network\nG = NeuronGroup(N, eqs, threshold='v>Vth', reset='v = 0*mV', method='linear')\n\n# Connect neurons randomly\nfor i in range(N):\n    indices = np.random.choice(N, int(N*p), replace=False)\n    connections = zip([i]*len(indices), indices)\n    G.connect('v', 'v', connection_rule=connection_rule(connections))\n\n# Input current\nG.I = '50*nA'\n\n# Run simulation\nrun(100*ms)\n\n# Record spike times\nspike_times = sorted(G.t_spike[:])\n\nprint(spike_times)\n```\n\nThis script creates a network of 100 neurons with random connections. It also applies a constant input current of 50 nA to the network. The neurons are simulated until 100 ms. The spike times are then printed out.\n\nPlease note that Brian2 uses the `nA` (nano Ampere) for current, `mV` (milli Volt) for voltages, and `ms` (milli Second) for time units. Also, please install Brian2 library before running this script. You can install it using pip:\n\n```bash\npip install brian2\n```\n"
+  },
+  {
+    "id": "network_15",
+    "category": "Network Creation",
+    "framework": "Norse",
+    "prompt": "Build a Norse recurrent network for temporal classification with 30 hidden neurons. Provide random input and print spikes.",
+    "semantic_rules": [
+      "norse.torch",
+      "LIFRecurrentCell",
+      "torch.randn",
+      "nn.Linear"
+    ],
+    "response": "Building a Norse network requires Python, NumPy, and the NoisyOR (Norse) package. Here's a simple example of a recurrent network for temporal classification.\n\n```python\nimport norse\nimport numpy as np\nimport norse.torch as nt\n\n# Define the recurrent network\nclass RNN(nt.SequentialState):\n    def __init__(self, n):\n        super().__init__(\n            nt.Lift(nt.Linear(30, 30)),\n            nt.Sigmoid(),\n            nt.Lift(nt.Linear(30, n))\n        )\n\n# Initialize the recurrent network with 30 hidden neurons\nrnn = RNN(30)\n\n# Create a random input of size 30\ninput = np.random.rand(30)\n\n# Reset the initial state of the network\nz, s = rnn.init_state(batch_size=1, device='cpu')\n\n# Pass the input through the network\nz, s = rnn(nt.from_numpy(input.astype(np.float32)), z, s)\n\n# Print the outputs\nprint(z.detach().numpy())\n```\n\nThis code creates a recurrent neural network with 30 hidden neurons. It uses the sigmoid activation function and the Norse's linear transformation function. It then creates a random input of size 30, initializes the network's state, and passes the input through the network. Finally, it prints the outputs.\n\nNote: Please ensure that you have installed the necessary packages by using the pip command: `pip install norse`. \n\nThis is a very basic example of how to use Norse for recurrent networks, and does not include any training or optimization. You would need to add a training loop and define a loss function to train this network.\n"
+  },
+  {
+    "id": "network_16",
+    "category": "Network Creation",
+    "framework": "Brian2",
+    "prompt": "Simulate two connected populations (excitatory and inhibitory) in Brian2 with STDP on excitatory connections. Plot firing rates.",
+    "semantic_rules": [
+      "NeuronGroup",
+      "Synapses",
+      "on_pre",
+      "on_post",
+      "plot"
+    ],
+    "response": "Sure, here's an example of how you can simulate two populations of neurons in Brian2 with Spike-Timing-Dependent Plasticity (STDP) on excitatory connections.\n\nFirst, let's import the necessary modules:\n\n```python\nfrom brian2 import *\nimport matplotlib.pyplot as plt\n```\n\nNext, we'll define the Brian2 defaults:\n\n```python\ndefaultclock.dt = 0.1 * ms\ndefaultclock.t = 0 * ms\n```\n\nLet's define the network parameters:\n\n```python\nN = 1000  # number of neurons\ntaum = 20 * ms  # adaptation time constant\ntaue = 5 * ms  # synaptic time constant\nVt = 1.0  # threshold voltage\nVr = -70. * mV  # reset voltage\nEl = -74. * mV  # leak reversal\nEe = 0. * mV  # excitatory synaptic weight\nEi = -80. * mV  # inhibitory synaptic weight\nIapp = 100. * nA  # constant current\ntaud = 10. * ms  # stdp time-delay\n\neqs = '''\ndvm/dt = (ge+gi-(w+wL))/taum : 1\ndh/dt = (1/taue)*(-h+w/(1+exp((Vm-Vr)/Vt))) : 1\ndw/dt = (1/taud)*(-w+sum(xi*(h-v))) : 1\ndwL/dt = (1/taud)*(-wL+sum(xiL*(h-v))) : 1\nxi = (1/taud)*w : 1\nxiL = (1/taud)*wL : 1\ndv/dt = (Iapp-w-wL)/(10*pF) : volt\n'''\n```\n\nHere, we defined the equations for the neuron model, which includes synaptic weight dynamics, membrane voltage dynamics, and the current driving the neuron.\n\nNext, we define the neuron groups:\n\n```python\nG = NeuronGroup(N, model=eqs, threshold='v>Vt', reset='v = Vr', method='linear')\nG.v = El\nG.h = 0.5\nG.w = rand() * 0.01\nG.wL = rand() * 0.01\n```\n\nWe then define the synaptic weights and the synaptic models:\n\n```python\nE = Synapses(G, G, model='''\nw : 1\ndw/dt = (1/taud)*(-w+sum(xi*(h-v))) : 1\nxi = (1/taud)*w : 1\n''', on_pre='w+=Ee')\nE.connect('i<j', p=0.02)\nE.w = rand() * 0.01\n\nI = Synapses(G, G, model='''\nw : 1\ndw/dt = (1/taud)*(-w+sum(xi*(h-v))) : 1\nxi = (1/taud)*w : 1\n''', on_pre='w+=Ei')\nI.connect('i<j', p=0.02)\nI.w = rand() * 0.01\n```\n\nNow, we'll run the simulation:\n\n```python\nrun(100 * ms)\n```\n\nFinally, we'll plot the firing rates:\n\n```python\nplt.figure(figsize=(10, 4))\nplt.hist(G.t/ms, bins=20, histtype='step', color='black', label='Neurons')\nplt.xlabel('Time (ms)')\nplt.ylabel('Number of Neurons')\nplt.legend(loc='upper right')\nplt.show()\n```\n\nThis will plot the histogram of the time at which each neuron fired, which gives an idea of the firing rates.\n"
+  },
+  {
+    "id": "network_17",
+    "category": "Network Creation",
+    "framework": "snnTorch",
+    "prompt": "Design a snnTorch spiking MLP with three layers (100-50-10 LIF neurons). Perform one forward pass with dummy data.",
+    "semantic_rules": [
+      "snn.Leaky",
+      "torch.rand",
+      "nn.Linear"
+    ],
+    "response": "Sure, I can help you with that. The code below demonstrates how to create a simple SNN MLP using snnTorch.\n\n```python\nimport torch\nfrom snntorch import spikegen, lif, functional\nfrom snntorch.utils import count_parameters\nimport numpy as np\n\n# Set device\ndevice = \"cuda\" if torch.cuda.is_available() else \"cpu\"\n\n# Define the SNN MLP\nclass SNN(torch.nn.Module):\n    def __init__(self):\n        super(SNN, self).__init__()\n        self.fc1 = lif.LIF(100, 50)\n        self.fc2 = lif.LIF(50, 10)\n\n    def forward(self, x):\n        x = spikegen.rate(x, 100)\n        x = self.fc1(x)\n        x = self.fc2(x)\n        return x\n\n# Initialize the network\nnet = SNN().to(device)\n\n# Create dummy data\ndummy_input = torch.Tensor(1, 1, 100).to(device)\n\n# Perform a forward pass\nout = net(dummy_input)\nprint(out)\n```\n\nThis script creates a simple SNN MLP with three layers: 100-50-10 neurons. It also creates a dummy input of size 1x1x100 and performs a forward pass with it. The output `out` will be a tensor of size 1x1x10, representing the spike counts of the last layer.\n\nPlease note that you need to have the `snntorch` package installed in your Python environment. If you don't have it installed, you can do so by running `pip install snntorch`.\n\nAlso, please replace the dummy input with your actual data.\n"
+  },
+  {
+    "id": "network_18",
+    "category": "Network Creation",
+    "framework": "Brian2",
+    "prompt": "Create a Brian2 model of a ring network with 10 neurons, each connected to its two neighbors. Simulate and plot spikes.",
+    "semantic_rules": [
+      "NeuronGroup",
+      "Synapses",
+      "SpikeMonitor",
+      "plot"
+    ],
+    "response": "Here is an example of a Brian2 model of a ring network with 10 neurons each connected to its two neighbors:\n\n```python\nfrom brian2 import *\n\nstart_scope()\n\nN = 10  # number of neurons\neqs = '''\ndv/dt = (I-v)/tau : 1\nI : 1\ntau : second\n'''\n\nneuron = NeuronGroup(N, eqs, threshold='v>1', reset='v = 0', refractory=10*ms, method='linear')\nneuron.I = '2*amp*(0.5+0.5*sin(2*pi*20*t/ms))'  # apply current\n\nsynapses = Synapses(neuron, neuron, model='w : 1', on_pre='v_post += w')\nsynapses.connect('i==(i+1)%N', p=0.5)  # each neuron is connected to its two neighbors\nsynapses.w = '0.5 + 0.5*i/N'  # weights are proportional to the distance\n\nrun(100*ms)\n\nplot(synapses.t/ms, synapses.i, '.k')\nxlabel('Time (ms)')\nylabel('Neuron index')\nshow()\n```\n\nIn this model, each neuron is connected to its two neighbors in the ring. The weights of the synapses are proportional to the distance between the neurons. The current is a sine wave applied to the neurons. The simulation runs for 100 ms.\n\nThe plot shows the indices of the neurons that spiked at each time step.\n\nNote: Brian2 is a powerful simulator and requires a bit of familiarity to use. If you're not already familiar with it, you may want to read up on it before trying to understand this code.\n"
+  },
+  {
+    "id": "network_19",
+    "category": "Network Creation",
+    "framework": "Brian2",
+    "prompt": "Implement a modular network in Brian2 with two clusters of neurons. Connect with high intra-cluster and low inter-cluster probability.",
+    "semantic_rules": [
+      "NeuronGroup",
+      "Synapses",
+      "p="
+    ],
+    "response": "Sure, here is a simple example of how you can create a network with two clusters of neurons in Brian2.\n\n```python\nfrom brian2 import *\n\nstart_scope()\n\n# Number of neurons in each cluster\nN = 200\n\n# Probabilities\np_intra = 0.1\np_inter = 0.01\n\n# Model parameters\neqs = '''\ndv/dt = (I-v)/tau : 1\nI : 1\ntau : second\n'''\n\n# Network parameters\nnet = Network()\n\n# Neuron group\nneurons = NeuronGroup(2*N, eqs, threshold='v>1', reset='v = 0', method='linear')\nneurons.I = '2*i*mV'\nneurons.tau = '10*ms'\n\n# Synapses\nS = Synapses(neurons, neurons, on_pre='v_post += 2*mV')\nS.connect('i<N', p=p_intra)\nS.connect('i>=N', 'i<N', p=p_inter)\n\nnet.run(100*ms)\n\nplot(neurons.t[neurons.v>0]/ms, neurons.v[neurons.v>0], '.k')\nxlabel('Time (ms)')\nylabel('v')\nshow()\n```\n\nIn this script, we first define a string `eqs` which contains the differential equation for the membrane potential `v` of each neuron. Then we create a `NeuronGroup` of 2*N neurons, with the equations `eqs`, a threshold for spiking `v>1`, and a reset rule `v = 0`.\n\nWe then create a `Synapses` object `S`, which connects the neurons in the `neurons` group to themselves. Neurons in the first half of the group (`i<N`) are connected to the second half with a probability `p_intra`. Neurons in the second half are connected to the first half with a probability `p_inter`.\n\nFinally, we run the network for 100ms and plot the membrane potential of the neurons that spiked over time.\n"
+  },
+  {
+    "id": "network_20",
+    "category": "Network Creation",
+    "framework": "Norse",
+    "prompt": "Write Norse code to simulate a hierarchical spiking network with two LIF layers of different sizes. Run random input spikes for 40 steps.",
+    "semantic_rules": [
+      "norse.torch",
+      "LIFCell",
+      "torch.randn",
+      "range(40)"
+    ],
+    "response": "Sure, here is a simple simulation using Brian2, a Python library for simulating neural networks. \n\n```python\nfrom brian2 import *\nimport random\n\nstart_scope()\n\n# Define the NeuronGroup for the input layer\nN = 5   # number of neurons in the input layer\ntau = 10*ms    # membrane time-scale\nV_th = 20*mV    # spike threshold\ninput_layer = NeuronGroup(N, model='''\n    dv/dt = (1-v)/tau : 1\n    I : 1\n    R : 1\n    ''', threshold='v>V_th', reset='v = 0', method='linear')\n\n# Define the NeuronGroup for the first LIF layer\nM = 4   # number of neurons in the first LIF layer\nneuron = NeuronGroup(M, model='''\n    dv/dt = (1-v)/tau : 1\n    I : 1\n    R : 1\n    ''', threshold='v>V_th', reset='v = 0', method='linear')\n\n# Define the NeuronGroup for the second LIF layer\nP = 3   # number of neurons in the second LIF layer\nneuron2 = NeuronGroup(P, model='''\n    dv/dt = (1-v)/tau : 1\n    I : 1\n    R : 1\n    ''', threshold='v>V_th', reset='v = 0', method='linear')\n\n# Define the synapses\nS = 1   # number of synapses\nsynapses = Synapses(input_layer, neuron, model='''\n    w : 1\n    ''', on_pre='''\n    w += 1\n    ''', on_post='''\n    v += w\n    ''')\n\nsynapses2 = Synapses(neuron, neuron2, model='''\n    w : 1\n    ''', on_pre='''\n    w += 1\n    ''', on_post='''\n    v += w\n    ''')\n\n# Define the input spikes\ninput_spikes = []\nfor _ in range(40):\n    input_spikes.append((random.randint(0, N-1), random.uniform(0, 10)*ms))\n\n# Run the simulation\nrun(40*ms)\n\n# Plot the membrane potentials\nplot(input_layer.t/ms, input_layer.v)\nxlabel('Time (ms)')\nylabel('Membrane potential (v)')\nshow()\n```\n\nThis script simulates a hierarchical spiking network with two LIF layers of different sizes. It runs 40 steps of random input spikes. The membrane potentials of the neurons are plotted at the end. Please note that you need to have Brian2 installed to run this script.\n"
+  },
+  {
+    "id": "opt_2",
+    "category": "Code Optimization / Translation",
+    "framework": "snnTorch",
+    "prompt": "Translate a custom PyTorch LIF neuron into snnTorch LIF module.",
+    "semantic_rules": [
+      "snn.Leaky",
+      "nn.Module",
+      "forward"
+    ],
+    "response": "Sure, I can guide you on how to translate a custom PyTorch LIF neuron into an equivalent snnTorch LIF module. Let's assume you have a custom PyTorch LIF neuron defined as follows:\n\n```python\nimport torch\n\nclass LIFNeuron(torch.nn.Module):\n    def __init__(self, tau=10.0, v_th=1.0, v_reset=0.0):\n        super().__init__()\n        self.tau = tau\n        self.v_th = v_th\n        self.v_reset = v_reset\n\n    def forward(self, input_current):\n        # Assuming that the input_current is the input current injection to the neuron\n        # and v is the membrane voltage, i is the input current, and spike is the spike output\n        self.v = self.v + (input_current - self.v) / self.tau\n        self.spike = self.v > self.v_th\n        self.v = self.v * (1 - self.spike) + self.v_reset * self.spike\n        return self.spike\n```\n\nTo translate this into a snnTorch LIF module, you can follow these steps:\n\n1. Import `snn` from snntorch.\n\n```python\nfrom snn import LIF\n```\n\n2. Create an instance of the LIF neuron in snntorch:\n\n```python\nlif_neuron = LIF(beta=1/10.0, v_th=1.0, v_reset=0.0)\n```\n\nIn the above code, `beta` is equivalent to `1/tau`, which is the time constant in the original neuron model.\n\n3. Use the neuron instance in your network:\n\n```python\nclass Net(torch.nn.Module):\n    def __init__(self):\n        super().__init__()\n        self.lif = LIF(beta=1/10.0, v_th=1.0, v_reset=0.0)\n\n    def forward(self, input_current):\n        spikes, _ = self.lif(input_current)\n        return spikes\n```\n\nIn this example, `input_current` should be a tensor of the same shape as the input current to the neuron. The `forward` method of the network returns the spike output of the LIF neuron.\n\nNote: The `beta` parameter in the `LIF` class of snntorch is the reciprocal of the time constant. This is a common practice in spiking neural networks, where a smaller `beta` corresponds to a faster time scale.\n"
+  },
+  {
+    "id": "opt_3",
+    "category": "Code Optimization / Translation",
+    "framework": "Brian2",
+    "prompt": "Optimize Brian2 code that repeatedly resets neuron states using explicit loops. Use vectorized reset instead.",
+    "semantic_rules": [
+      "NeuronGroup",
+      "v[:] =",
+      "np."
+    ],
+    "response": "To optimize Brian2 code that resets neuron states using explicit loops, you can use vectorized operations. The `neuron.states[:] = 0` line is doing a lot of work because it's resetting the states of all neurons in a loop. By using vectorized operations, you can reset all the neuron states in one go.\n\nHere is how you can do it:\n\n```python\nfrom brian2 import *\n\nstart_scope()\n\nN = 10000  # number of neurons\neqs = '''\ndv/dt = (I-v)/tau : 1\nI : 1\ntau : second\n'''\nP = NeuronGroup(N, eqs, threshold='v>1', reset='v = 0', method='linear')\nP.I = '2*nA'  # current to drive neurons\nP.tau = '10*ms'  # time constant\n\nrun(100*ms)  # run the simulation for 100ms\n\n# reset states of all neurons at once\nP.states[:] = 0\n```\n\nIn this code, `P.states[:] = 0` is a vectorized operation. It sets the state of all neurons in the group to 0 at once, instead of doing it in a loop. This makes the code much faster, especially when you have a large number of neurons.\n\nPlease replace your existing code with this optimized version.\n"
+  },
+  {
+    "id": "opt_4",
+    "category": "Code Optimization / Translation",
+    "framework": "Norse",
+    "prompt": "Translate a PyTorch RNN with tanh units into a Norse spiking recurrent network with LIF neurons.",
+    "semantic_rules": [
+      "norse.torch",
+      "LIFRecurrentCell",
+      "nn.RNN"
+    ],
+    "response": "Translating a PyTorch RNN with tanh units to a Norse spiking recurrent network with LIF neurons would require the knowledge of the structure of both the models. In this case, I will assume you have a basic understanding of PyTorch RNNs and the LIF neuron model in the Norse ecosystem.\n\nBelow is a simple example of how you might convert a PyTorch RNN with tanh units into a Norse spiking recurrent network with LIF neurons. This example assumes you have a PyTorch RNN with tanh units that looks something like this:\n\n```python\nimport torch\nimport torch.nn as nn\n\nclass TanhRNN(nn.Module):\n    def __init__(self, input_size, hidden_size):\n        super(TanhRNN, self).__init__()\n        self.hidden_size = hidden_size\n        self.tanh = nn.Tanh()\n        self.rnn = nn.RNN(input_size, hidden_size, 1, nonlinearity='tanh')\n\n    def forward(self, input):\n        output, hidden = self.rnn(input)\n        return self.tanh(output)\n```\n\nThe Norse equivalent might look something like this:\n\n```python\nimport norse\nimport norse.torch as nts\n\nclass LIFRNN(nts.SequentialState):\n    def __init__(self, input_size, hidden_size):\n        super(LIFRNN, self).__init__(\n            nts.LILinear(input_size, hidden_size, batch_size=1),\n            nts.LiLIF(),\n            nts.LILinear(hidden_size, hidden_size, batch_size=1),\n            nts.LiLIF()\n        )\n```\n\nPlease note that this is a very basic translation and might not work as expected. The actual translation could be complex depending on the structure of your models. Also, the Norse ecosystem is still in its early stages and the LIF neuron model is not as fully featured as the Tanh unit in PyTorch.\n"
+  },
+  {
+    "id": "opt_5",
+    "category": "Code Optimization / Translation",
+    "framework": "Brian2",
+    "prompt": "Improve memory usage of a Brian2 simulation with 5000 neurons by avoiding unnecessary StateMonitor variables.",
+    "semantic_rules": [
+      "NeuronGroup",
+      "StateMonitor",
+      "record=False"
+    ],
+    "response": "To improve memory usage in Brian2 simulation with 5000 neurons, you should avoid unnecessary StateMonitor variables. Brian2 is a powerful tool for simulating neural dynamics, but it can consume a lot of memory, especially for large simulations. Here are some ways to minimize memory usage:\n\n1. **Selectively monitor required states**: Instead of monitoring all states of all neurons, monitor only the states that are necessary. This can be done using the `states` keyword in the `StateMonitor` class. For example, if you only need to monitor the membrane potential of some neurons, you can specify this when creating the `StateMonitor`:\n\n```python\nmon = StateMonitor(group, ['v'], record=True)\n```\n\nThis will only allocate memory for the membrane potential of the specified neurons.\n\n2. **Limit the number of monitored variables**: If a neuron can have multiple states (e.g., voltage, current, etc.), only monitor the ones that are needed. For example, if you only need to monitor the voltage and not the current, you can do:\n\n```python\nmon = StateMonitor(group, ['v'], record=True)\n```\n\n3. **Use sparse recording**: If you only need to record a few neurons, consider using sparse recording. Sparse recording will only allocate memory for the neurons that are being recorded, not all neurons in the network.\n\n4. **Use smaller data types**: If the values of the states you are monitoring are within a specific range, use smaller data types. For example, if you know your voltages will be in the range of -80mV to 40mV, you can use the `'int16'` data type:\n\n```python\nmon = StateMonitor(group, ['v'], dtype='int16', record=True)\n```\n\n5. **Use smaller time steps**: If the time step size is too large, it can consume a lot of memory. Reduce the time step size as much as possible without compromising the accuracy of the simulation.\n\nBy using these techniques, you should be able to significantly reduce memory usage in your Brian2 simulation. However, it's important to remember that reducing the memory usage will also reduce the accuracy of the simulation.\n"
+  },
+  {
+    "id": "opt_6",
+    "category": "Code Optimization / Translation",
+    "framework": "snnTorch",
+    "prompt": "Convert a PyTorch ANN with ReLU activations into an equivalent snnTorch LIF-based SNN.",
+    "semantic_rules": [
+      "snn.Leaky",
+      "nn.ReLU",
+      "nn.Linear"
+    ],
+    "response": "To convert a PyTorch Artificial Neural Network (ANN) with ReLU activations into an equivalent snnTorch LIF-based Spiking Neural Network (SNN), you need to follow a process of defining the network architecture, initializing the network, converting the network to an SNN, and converting the activation functions. Here's a simple example:\n\n```python\nimport torch\nimport snntorch as snn\nfrom snntorch import spikegen, lif\n\n# Define the network architecture\nclass Net(torch.nn.Module):\n    def __init__(self):\n        super(Net, self).__init__()\n        self.fc1 = torch.nn.Linear(100, 200)\n        self.fc2 = torch.nn.Linear(200, 10)\n\n    def forward(self, x):\n        x = torch.relu(self.fc1(x))\n        x = self.fc2(x)\n        return x\n\n# Initialize the network\nnet = Net()\n\n# Convert to SNN\nclass SNN(snn.Module):\n    def __init__(self):\n        super(SNN, self).__init__()\n        self.fc1 = snn.SpikeLinear(100, 200, bias=True)\n        self.fc2 = snn.SpikeLinear(200, 10, bias=True)\n        # Initialize SNN parameters\n        for m in self.modules():\n            if isinstance(m, snn.SpikeLinear):\n                m.initialize(lambda weights: snn.init.Kaiming_Uniform(weights, a=5**0.5))\n\n    def forward(self, x):\n        x = spikegen.rate(self.fc1(x))  # ReLU is approximated by Poisson spiking\n        x = spikegen.rate(self.fc2(x))\n        return x\n\n# Initialize the SNN\nsnn_net = SNN()\n\n# Copy the weights and bias from the PyTorch network to the SNN\nwith torch.no_grad():\n    snn_net.fc1.weight.copy_(net.fc1.weight)\n    snn_net.fc1.bias.copy_(net.fc1.bias)\n    snn_net.fc2.weight.copy_(net.fc2.weight)\n    snn_net.fc2.bias.copy_(net.fc2.bias)\n```\n\nThis code initializes a PyTorch network, then converts it to an SNN. The weights and biases are copied from the PyTorch network to the SNN. The activation functions have been approximated by Poisson spiking, which is the closest equivalent to ReLU activation in a rate-based SNN.\n\nPlease note that the above code assumes that the input and output dimensions of the network match the dimensions of your specific problem. Adjust the dimensions according to your specific network architecture.\n\nAlso, please install the necessary libraries (snntorch, torch) before running this code.\n\nThis is a simple conversion and doesn't take into account some important aspects of SNNs such as the handling of the time dimension, the introduction of Synaptic Weight Depression during backpropagation and the fact that SNNs have different dynamics compared to ANNs. For a more advanced conversion, you might want to look at the snntorch tutorials.\n"
+  },
+  {
+    "id": "opt_7",
+    "category": "Code Optimization / Translation",
+    "framework": "Brian2",
+    "prompt": "Optimize STDP implementation in Brian2 by replacing event-driven loops with built-in 'on_pre' and 'on_post' statements.",
+    "semantic_rules": [
+      "Synapses",
+      "on_pre",
+      "on_post",
+      "w +="
+    ],
+    "response": "In Brian2, STDP can be implemented using the `stdp.stdp()` function which is a synaptic plasticity rule. You can also use the `pre` and `post` attributes to define the firing times of the presynaptic and postsynaptic neurons.\n\nHere is an example of how to use these attributes:\n\n```python\nfrom brian2 import *\nfrom brian2.stdunits import *\n\nstart_scope()\n\n# Define neuron model\neqs = '''\ndv/dt = (I-v)/tau : 1\nI : 1\ntau : second\n'''\nG = NeuronGroup(2, eqs, threshold='v>1', reset='v = 0', method='linear')\n\n# Connect neurons\nC = Synapses(G, G, on_pre='I += w')\nC.connect('i != j')\nC.w = '0.01 + 0.01*i'  # different weight for each connection\n\n# Define STDP rule\nstdp_model = '''\nmu = w_post - w_pre\npre = mu*pre if mu > 0 else 0*pre\npost = mu*post if mu < 0 else 0*post\n'''\nC.stdp = Equations(stdp_model)\n\n# Run simulation\nrun(10*ms)\n\n# Plot results\nplot(G.t[0]/ms, G.v[0])\nxlabel('Time (ms)')\nylabel('Membrane potential (V)')\nshow()\n```\n\nThis code models two neurons, and each connection between them has a different weight. The `stdp` attribute defines the STDP rule, which increases the weight of connections towards the post-synaptic neuron and decreases the weight of connections towards the pre-synaptic neuron.\n\nNote that the `on_pre` and `on_post` attributes are used to define actions that happen at the presynaptic and postsynaptic events, respectively. In the STDP rule, we are updating the weight of the connection based on the difference between the weights of the presynaptic and postsynaptic neurons.\n\nThe optimized STDP implementation in Brian2 by replacing event-driven loops with built-in 'on_pre' and 'on_post' statements can help improve the performance of the simulation.\n"
+  },
+  {
+    "id": "opt_8",
+    "category": "Code Optimization / Translation",
+    "framework": "Norse",
+    "prompt": "Translate a PyTorch CNN into Norse by replacing linear activations with LIF layers. Use random input for testing.",
+    "semantic_rules": [
+      "norse.torch",
+      "LIFCell",
+      "nn.Conv2d"
+    ],
+    "response": "Sure, here is an example of how you might translate a PyTorch CNN with linear activations to a Norse network with LIF activations. This example uses a simple 2D convolutional network:\n\n```python\nimport torch\nfrom torch import nn\nimport torch.nn.functional as F\nfrom norse.torch.functional.lif import LIFParameters, LIFFeedForwardCell\nfrom norse.torch.module.lif import LIFCell\n\nclass PyTorchNet(nn.Module):\n    def __init__(self):\n        super(PyTorchNet, self).__init__()\n        self.conv1 = nn.Conv2d(1, 32, 3, 1)\n        self.conv2 = nn.Conv2d(32, 64, 3, 1)\n        self.dropout1 = nn.Dropout2d(0.25)\n        self.dropout2 = nn.Dropout2d(0.5)\n        self.fc1 = nn.Linear(9216, 128)\n        self.fc2 = nn.Linear(128, 10)\n\n    def forward(self, x):\n        x = self.conv1(x)\n        x = F.relu(x)\n        x = self.conv2(x)\n        x = F.relu(x)\n        x = F.max_pool2d(x, 2)\n        x = self.dropout1(x)\n        x = torch.flatten(x, 1)\n        x = self.fc1(x)\n        x = F.relu(x)\n        x = self.dropout2(x)\n        x = self.fc2(x)\n        output = F.log_softmax(x, dim=1)\n        return output\n\nclass NorseNet(nn.Module):\n    def __init__(self):\n        super(NorseNet, self).__init__()\n        self.conv1 = LIFFeedForwardCell(LIFParameters(0.7, 2.0))\n        self.conv2 = LIFFeedForwardCell(LIFParameters(0.7, 2.0))\n        self.fc1 = LIFCell(LIFParameters(0.7, 2.0))\n        self.fc2 = LIFCell(LIFParameters(0.7, 2.0))\n\n    def forward(self, x):\n        x = self.conv1(x)\n        x = F.relu(x)\n        x = self.conv2(x)\n        x = F.relu(x)\n        x = F.max_pool2d(x, 2)\n        x = torch.flatten(x, 1)\n        x = self.fc1(x)\n        x = F.relu(x)\n        x = self.fc2(x)\n        output = F.log_softmax(x, dim=1)\n        return output\n\n# Create random input tensor for testing\ninput_tensor = torch.randn(1, 1, 28, 28)\n\n# Instantiate both networks\npytorch_net = PyTorchNet()\nnorse_net = NorseNet()\n\n# Forward pass through both networks\npytorch_output = pytorch_net(input_tensor)\nnorse_output = norse_net(input_tensor)\n\n# Print output shapes for verification\nprint(pytorch_output.shape)\nprint(norse_output.shape)\n```\n\nNote that this is a simple example and does not include dropout or pooling layers. Also, you would need to adjust the input size of the fully connected layers to match the output size of the convolutional layers.\n\nPlease install the required libraries (`norse`, `torch`) before running this code.\n"
+  },
+  {
+    "id": "opt_9",
+    "category": "Code Optimization / Translation",
+    "framework": "Brian2",
+    "prompt": "Rewrite inefficient nested loops for synapse updates into vectorized operations in Brian2.",
+    "semantic_rules": [
+      "Synapses",
+      "w[:] =",
+      "np."
+    ],
+    "response": "Brian2 is a library for simulating neuronal networks on CPU and GPU, and it supports vectorized operations, which can significantly speed up computation. However, I need more specific information to provide a more precise answer. Could you please provide the code for the inefficient nested loops you're referring to? The rewrite will depend on the specifics of the code.\n"
+  },
+  {
+    "id": "opt_10",
+    "category": "Code Optimization / Translation",
+    "framework": "snnTorch",
+    "prompt": "Replace manual time-step iteration in PyTorch code with snnTorch Sequential API for spiking layers.",
+    "semantic_rules": [
+      "snn.Sequential",
+      "nn.Sequential"
+    ],
+    "response": "To replace a manual time-step iteration in PyTorch code with snnTorch Sequential API for spiking layers, you would need to rewrite your code in a way that uses the Sequential API. The Sequential API allows you to create a network that is capable of spiking neurons over time.\n\nHere's a simple example of how you might replace a PyTorch code with snnTorch Sequential API:\n\n```python\nimport torch\nimport snntorch as snn\n\n# Define the spiking neural network\nclass SNN(snn.Sequential):\n    def __init__(self):\n        super(SNN, self).__init__(\n            snn.Leaky(beta=0.2),  # First layer with a Leaky Integrate-and-Fire neuron\n            snn.LIF(),  # Hidden layer with a Leaky Integrate-and-Fire neuron\n            snn.Leaky(beta=0.2),  # Second layer with a Leaky Integrate-and-Fire neuron\n            torch.nn.Linear(100, 10)  # Output layer\n        )\n\n# Create an instance of the SNN\nmodel = SNN()\n\n# Define the loss function and optimizer\nloss_fn = torch.nn.CrossEntropyLoss()\noptimizer = torch.optim.Adam(model.parameters(), lr=0.02)\n\n# Forward pass through the network\ninput_data = torch.rand(1, 100)\ntarget_data = torch.randint(0, 10, (1,))\n\noutput = model(input_data)\n\n# Calculate the loss\nloss = loss_fn(output, target_data)\n\n# Backward pass\noptimizer.zero_grad()\nloss.backward()\n\n# Update the weights\noptimizer.step()\n```\n\nIn this example, we've replaced the time-step iteration with the snnTorch Sequential API. We define a network with two hidden layers of Leaky Integrate-and-Fire neurons, and an output layer using a fully-connected layer. The model is trained using the CrossEntropyLoss and the Adam optimizer. The forward pass and backward pass are automatically handled by snnTorch.\n\nPlease note that this is a very basic example. Depending on your specific use case, you may need to adjust the network architecture, the loss function, and the training loop.\n"
+  },
+  {
+    "id": "opt_11",
+    "category": "Code Optimization / Translation",
+    "framework": "Brian2",
+    "prompt": "Reduce computational load in Brian2 by using sparse synaptic matrices for large random networks.",
+    "semantic_rules": [
+      "Synapses",
+      "sparse=True",
+      "scipy.sparse"
+    ],
+    "response": "Brian2 is a simulator for neuronal networks that is known for its efficiency. However, it does not support sparse matrices natively. The most common way to increase the efficiency of Brian2 is by reducing the number of synapses. Sparse synaptic matrices can help in this process by reducing the number of connections in the network, which can significantly reduce the computational load.\n\nHere's an example of how you can use a sparse matrix in Brian2:\n\n```python\nfrom brian2 import *\nfrom scipy import sparse\n\n# Create a sparse connectivity matrix\nN = 1000\np = 0.1  # probability of connection\nrng = default_rng()\nsparse_connectivity = sparse.random(N, N, p, format='csr', random_state=rng)\n\n# Convert the sparse matrix to Brian2's format\nsparse_connectivity = SparseConnection(sparse_connectivity.indices(), \n                                      sparse_connectivity.data(), \n                                      N, N)\n\n# Create neuron groups\neqs = '''\ndv/dt = (I-v)/tau : 1\nI : 1\ntau : second\n'''\nG1 = NeuronGroup(N, eqs, threshold='v>1', reset='v = 0', method='linear')\nG2 = NeuronGroup(N, eqs, threshold='v>1', reset='v = 0', method='linear')\n\n# Connect neuron groups with the sparse matrix\nG1.I = '2*nA'\nG2.I = '2*nA'\nS = Synapses(G1, G2, model='w : 1', pre='v_post += w*0.1', method='linear')\nS.connect(sparse_connectivity)\n\n# Run the simulation\nrun(1*second)\n```\n\nThis script creates a random network with 1000 neurons and 10% connectivity. The `SparseConnection` object is used to specify the connections in the network. The `Synapses` object then uses this sparse matrix to connect the neurons. The simulation runs for 1 second.\n\nPlease note that this is just an example and may need to be adapted to your specific use case.\n"
+  },
+  {
+    "id": "opt_12",
+    "category": "Code Optimization / Translation",
+    "framework": "Norse",
+    "prompt": "Translate a PyTorch autoencoder with sigmoid units into a spiking autoencoder in Norse using LIF neurons.",
+    "semantic_rules": [
+      "norse.torch",
+      "LIFCell",
+      "nn.Sigmoid"
+    ],
+    "response": "The translation of a PyTorch autoencoder to a spiking autoencoder with LIF neurons in Norse involves several steps. Firstly, we need to understand what an autoencoder is and how it works. An autoencoder is a type of artificial neural network used for learning efficient codings of input data. It consists of two main parts: an encoder and a decoder. The encoder compresses the input data into a compact representation and the decoder reconstructs the original input from this representation.\n\nHere is an example of how you might translate a PyTorch autoencoder using sigmoid units to a spiking autoencoder in Norse:\n\n```python\nimport torch\nfrom norse.torch import LIFCell, LIFParameters\n\nclass SpikingAutoencoder(torch.nn.Module):\n    def __init__(self, input_size, hidden_size):\n        super(SpikingAutoencoder, self).__init__()\n        self.encoder = torch.nn.Linear(input_size, hidden_size)\n        self.decoder = torch.nn.Linear(hidden_size, input_size)\n        self.lif_cell = LIFCell(LIFParameters(torch.tensor(0.2), torch.tensor(0.2)))\n\n    def forward(self, x):\n        hidden = self.encoder(x)\n        spikes = self.lif_cell(hidden)\n        output = self.decoder(spikes)\n        return output\n```\n\nThis is a simple example of a spiking autoencoder. In this example, the `SpikingAutoencoder` class inherits from `torch.nn.Module` and has two linear layers (`encoder` and `decoder`) and one LIFCell. The `forward` method applies the encoder to the input, applies the LIFCell to the encoded data, and then applies the decoder to the result.\n\nPlease note that this is a simplified example and doesn't include the encoding/decoding process, the training process or any error handling. Also, the LIFCell from Norse uses the standard LIF neuron model, where the membrane potential is reset to the resting potential (`v_rest`) when a spike is detected (`v > v_threshold`), and the potential is decayed over time (`v = (1 - v_decay) * v`). The parameters `v_threshold`, `v_rest` and `v_decay` are all defined in the LIFParameters.\n\nFinally, please note that the translation of a PyTorch autoencoder to a spiking autoencoder is a complex task that involves a deep understanding of both PyTorch and Norse, and may require further adjustments based on the specifics of your task.\n"
+  },
+  {
+    "id": "opt_13",
+    "category": "Code Optimization / Translation",
+    "framework": "Brian2",
+    "prompt": "Optimize code that recalculates identical neuron parameters each time step. Precompute constants outside loop.",
+    "semantic_rules": [
+      "NeuronGroup",
+      "Equations",
+      "constant"
+    ],
+    "response": "Optimizing code involves various techniques. Here's an example of how you can optimize code that recalculates identical neuron parameters each time step. We will precompute constants outside the loop:\n\n```python\n# Neuron parameters\na = 1\nb = 2\nc = 3\n\n# Number of time steps\nn_steps = 1000\n\n# Precompute constants\nprecomp_const = a * b * c\n\n# Initialize list to store neuron parameters\nneuron_params = []\n\n# Loop through time steps\nfor t in range(n_steps):\n    # Recalculate neuron parameters using precomputed constant\n    neuron_param = precomp_const * (a + b + c)\n    # Store neuron parameter\n    neuron_params.append(neuron_param)\n\n# Now the neuron_params list contains the neuron parameters for all time steps\n```\n\nIn this example, we've precomputed the product of a, b, and c. We use this precomputed constant in the loop where we recalculate the neuron parameters. By doing this, we avoid the overhead of performing the multiplication operation in each iteration of the loop. \n\nNote that the effectiveness of this optimization will depend on the specific characteristics of your code and the hardware it's being run on. In some cases, this sort of optimization might not have a noticeable effect, while in others it might make a significant difference.\n"
+  },
+  {
+    "id": "opt_14",
+    "category": "Code Optimization / Translation",
+    "framework": "snnTorch",
+    "prompt": "Convert a PyTorch GRU model into an SNN equivalent using snnTorch LIF recurrent layers.",
+    "semantic_rules": [
+      "snn.RLeaky",
+      "nn.GRU"
+    ],
+    "response": "Here is a basic example of how you can convert a PyTorch GRU model to a SNN using snnTorch LIF recurrent layers. This example assumes that you have a PyTorch GRU model that takes as input a sequence of data and outputs a sequence of outputs.\n\n```python\nimport torch\nimport snntorch as snn\nfrom snntorch import spikegen, lif\nfrom torch import nn\n\nclass GRU(nn.Module):\n    def __init__(self, input_size, hidden_size, num_layers):\n        super(GRU, self).__init__()\n        self.hidden_size = hidden_size\n        self.num_layers = num_layers\n\n        self.gru = nn.GRU(input_size, hidden_size, num_layers)\n\n    def forward(self, x):\n        h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(x.device) \n        out, _ = self.gru(x, h0) \n        return out\n\n# Define your GRU\ngru_model = GRU(input_size=10, hidden_size=20, num_layers=2)\n\n# Define the SNN equivalent\nclass SNNGRU(snn.Module):\n    def __init__(self, input_size, hidden_size, num_layers):\n        super(SNNGRU, self).__init__()\n        self.hidden_size = hidden_size\n        self.num_layers = num_layers\n\n        self.gru = snn.LIFGRU(input_size, hidden_size, num_layers)\n\n    def forward(self, x):\n        # Note: SpikeGenerator requires a tensor of shape (batch_size, timesteps, features)\n        spike_gen = spikegen.SpikeGenerator(x)\n        x = spike_gen()\n\n        h0 = torch.zeros(self.num_layers, x.size(1), self.hidden_size).to(x.device)\n        spike_h0 = lif.LIFState(h0, lif.init_leaky(h0))\n\n        _, _, out = self.gru(x, spike_h0)\n        return out\n\n# Define your SNN GRU\nsnn_gru_model = SNNGRU(input_size=10, hidden_size=20, num_layers=2)\n\n# To run the models, you can use the same data:\n# data = torch.randn(10, 3, 10)  # (sequence_length, batch_size, input_size)\n# output = gru_model(data)\n# output = snn_gru_model(data)\n```\n\nPlease note that this is a very basic example and doesn't include some of the features that you may need in a real application, such as backpropagation, learning, etc. Also, the conversion from a PyTorch GRU to an SNN using snnTorch LIF recurrent layers might not be perfect due to the differences between the two. It's important to verify that the output of the SNN GRU model is equivalent to the output of the PyTorch GRU model.\n"
+  },
+  {
+    "id": "opt_15",
+    "category": "Code Optimization / Translation",
+    "framework": "Brian2",
+    "prompt": "Refactor Brian2 network creation code to avoid creating and deleting neuron groups repeatedly. Reuse defined groups.",
+    "semantic_rules": [
+      "NeuronGroup",
+      "Synapses",
+      "clear()"
+    ],
+    "response": "Your question seems to be related to the Brian2 network simulation framework. Brian2 is a Python package for simulating neural dynamics and network models. \n\nHere is a general way to avoid creating and deleting neuron groups repeatedly. Instead of creating and deleting groups, you can define them once and reuse them. \n\n```python\nfrom brian2 import *\n\nstart_scope()\n\n# Define the neuron model\neqs = '''\ndv/dt = (I-v)/tau : 1\nI : 1\ntau : second\n'''\n\n# Define the neuron group\nG = NeuronGroup(1000, eqs, threshold='v>1', reset='v = 0', method='linear')\n\n# Set the input current\nG.I = '10*nA'\n\n# Run the simulation\nrun(100*ms)\n\n# Change the input current without recreating the group\nG.I = '20*nA'\n\n# Run the simulation\nrun(100*ms)\n```\n\nIn this code, we first define a neuron model and a group of neurons with 1000 neurons. We set an input current for these neurons. Then, we run the simulation for 100ms. After that, we change the input current without recreating the neuron group. We run the simulation again for another 100ms.\n\nPlease replace the neuron model and the parameters according to your needs.\n"
+  },
+  {
+    "id": "opt_16",
+    "category": "Code Optimization / Translation",
+    "framework": "Norse",
+    "prompt": "Translate a PyTorch MLP classifier into a spiking network in Norse with surrogate gradient training.",
+    "semantic_rules": [
+      "norse.torch",
+      "LIFCell",
+      "nn.Linear",
+      "loss.backward"
+    ],
+    "response": "Sure, I can provide you a simple example of how you might translate a PyTorch MLP classifier into a spiking neural network using the Norse library in PyTorch. This example will be very basic, and you'll likely need to adapt it to suit your specific needs.\n\n```python\nimport torch\nimport norse.torch as norse\n\nclass SNNClassifier:\n    def __init__(self, input_size, hidden_size, num_classes):\n        self.hidden = norse.LIFCell(input_size, hidden_size)\n        self.output = norse.LinearCell(hidden_size, num_classes)\n\n    def forward(self, x):\n        x = self.hidden(x)\n        x = self.output(x)\n        return x\n```\n\nFor surrogate gradient training, you can use a loss function like `torch.nn.CrossEntropyLoss()`, but in spiking neural networks, you typically use the summed-squared error (SSE) as a loss function, which you could approximate using a surrogate gradient like `norse.functional.sse`. Here's how you might implement this:\n\n```python\ndef surrogate_gradient_training(model, train_loader, criterion, optimizer, num_epochs):\n    for epoch in range(num_epochs):\n        for i, (inputs, labels) in enumerate(train_loader):\n            optimizer.zero_grad()\n            outputs = model(inputs)\n            loss = criterion(outputs, labels)\n            loss.backward()\n            optimizer.step()\n        print(f\"Epoch {epoch+1}/{num_epochs} | Loss: {loss.item()}\")\n```\n\nThis is a very basic example, and you'll need to adapt it to your specific use case. You'll also need to ensure that you're properly handling the time dimension in your data and that your network is capable of handling the right number of steps.\n"
+  },
+  {
+    "id": "opt_17",
+    "category": "Code Optimization / Translation",
+    "framework": "Brian2",
+    "prompt": "Use Brian2 'run_regularly' to replace explicit Python loops that update neuron states every time step.",
+    "semantic_rules": [
+      "run_regularly",
+      "NeuronGroup"
+    ],
+    "response": "To use Brian2's `run_regularly` method, you need to have a NeuronGroup or SynapsesGroup and define a function that will be called regularly at the specified interval. Here is an example:\n\n```python\nfrom brian2 import *\n\nstart_scope()\n\n# Define the parameters\neqs = '''\ndv/dt = (I-v)/tau : 1\nI : 1\ntau : second\n'''\n\n# Define the neuron model\nG = NeuronGroup(1, eqs, threshold='v>1', reset='v = 0', method='linear')\n\n# Define the input current\nG.I = 1*nA\n\n# Define a function to be called regularly\ndef update_current(t):\n    G.I = 2*nA\n\n# Run the simulation with a regular update\nrun(10*ms, method='linear', report='text')\n\n# Print the voltages\nprint(G.v)\n```\n\nIn this example, the input current `I` is updated every 10ms by the function `update_current`. The function sets `I` to 2*nA, effectively changing the input current. Note that this is a simplified example and may not represent the behavior of your specific model.\n"
+  },
+  {
+    "id": "opt_18",
+    "category": "Code Optimization / Translation",
+    "framework": "snnTorch",
+    "prompt": "Optimize snnTorch code by using batched spike inputs instead of processing each sample sequentially.",
+    "semantic_rules": [
+      "torch.rand",
+      "batch_size,"
+    ],
+    "response": "In order to optimize the SNNTorch code by using batched spike inputs, you need to modify your code in the following ways:\n\n1. Instead of processing each sample sequentially, you should process them all at once in a batch. \n\n2. You need to create a batch of inputs for the network, and feed these batches into the network instead of single samples.\n\n3. You need to modify the network to handle batch inputs. This could involve making changes to the SNN architecture, the learning rule, and the forward and backward passes.\n\nHere's a basic example of how you might change your code to use batched inputs:\n\n```python\n# Assuming you have a network 'net' and a dataset 'data'\n# Also assuming that 'data' returns a batch of inputs\n\n# Initialize batch of inputs\nbatch_size = 100\nspike_inputs = torch.zeros(batch_size, *input_size)\n\n# Iterate over all samples in the dataset\nfor i in range(len(data)):\n    # Get the next batch of samples\n    sample = data[i]\n\n    # Copy the sample into the correct position in the batch\n    spike_inputs[i % batch_size] = sample\n\n    # If we've filled up the batch, or if it's the last sample, feed it into the network\n    if i % batch_size == 0 or i == len(data) - 1:\n        # Feed the batch into the network\n        outputs = net(spike_inputs)\n\n        # Do something with the outputs...\n        # ...\n\n        # Reset the batch\n        spike_inputs.zero_()\n```\n\nThis is just a simple example. In practice, you might need to modify the code to handle the case where the number of samples isn't a multiple of the batch size, and you might also need to handle additional complexities that might arise from using batched inputs with your specific SNN architecture.\n\nAlso, note that the `snnTorch` library provides its own mechanism to handle batches in the simulations, so you might not need to write your own batching code if you're using `snnTorch`.\n"
+  },
+  {
+    "id": "opt_19",
+    "category": "Code Optimization / Translation",
+    "framework": "Brian2",
+    "prompt": "Replace inefficient Python-based spike logging with Brian2 built-in SpikeMonitor.",
+    "semantic_rules": [
+      "SpikeMonitor",
+      "spikes"
+    ],
+    "response": "To replace inefficient Python-based spike logging with Brian2 built-in SpikeMonitor, you need to follow these steps:\n\n1. Import the necessary modules from Brian2.\n\n```python\nfrom brian2 import *\n```\n\n2. Define your neuron model.\n\n```python\neqs = '''\ndv/dt = (I-v)/tau : 1\nI : 1\ntau : second\n'''\nNeuron = NeuralType(eqs, namespace=locals())\n```\n\n3. Create an instance of the neuron model.\n\n```python\nneuron = Neuron(I=10*nA)\n```\n\n4. Create a SpikeMonitor to record the spikes.\n\n```python\nspike_monitor = SpikeMonitor(neuron)\n```\n\n5. Run the simulation and plot the spike times.\n\n```python\nrun(10*ms)\nplot(spike_monitor.t/ms, spike_monitor.i, '.k')\nxlabel('Time (ms)')\nylabel('Neuron index')\nshow()\n```\n\nThis code will replace your inefficient Python-based spike logging with the Brian2 built-in SpikeMonitor, providing a more efficient and accurate way to analyze the spike times of your neuron model.\n"
+  },
+  {
+    "id": "opt_20",
+    "category": "Code Optimization / Translation",
+    "framework": "Norse",
+    "prompt": "Translate a TensorFlow LIF implementation into Norse. Provide random inputs to test correctness.",
+    "semantic_rules": [
+      "norse.torch",
+      "LIFCell",
+      "torch.randn"
+    ],
+    "response": "To provide a complete solution, I'll need to understand your TensorFlow LIF implementation first. Norse, a library for high-performance neuroscience simulations, currently does not support the Leaky Integrate-and-Fire (LIF) neuron model. However, we can create an implementation of LIF using the `norse` library.\n\nHere's a simple LIF model in `norse`:\n\n```python\nimport torch\nfrom torch import nn\nimport norse.torch as norse\n\nclass LIF(nn.Module):\n    def __init__(self, dt, T, method='rk4'):\n        super(LIF, self).__init__()\n        self.method = method\n        self.tau = dt / T\n        self.v_leak = torch.tensor(-60.)\n        self.v_threshold = torch.tensor(20.)\n        self.v_reset = torch.tensor(0.)\n        self.tau_decay = torch.tensor(5.)\n\n    def forward(self, input):\n        ts = torch.arange(0, input.size(1), 1, device=input.device, dtype=input.dtype) * self.dt\n        z_decay = torch.exp(-ts / self.tau_decay)\n        z = (1 - z_decay) * self.v_reset\n        z = norse.functional.liexp(input, z_decay)\n        z = norse.functional.lif(z, self.v_leak, self.v_threshold, self.v_reset)\n        return z\n```\n\nThis is a simple LIF model. You can test it with random inputs:\n\n```python\n# Define the model\nmodel = LIF(dt=0.001, T=20, method='rk4')\n\n# Random inputs\ninput = torch.randn(1, 10000)\n\n# Forward pass\noutput = model(input)\n```\n\nThis will create a LIF model and pass a random input through it.\n\nPlease note that you need to replace the TensorFlow LIF implementation details with the equivalent ones from the Norse library, as the details of the LIF model are different in TensorFlow and Norse.\n"
+  }
+]

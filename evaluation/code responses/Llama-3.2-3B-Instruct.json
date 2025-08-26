@@ -1,0 +1,1022 @@
+[
+  {
+    "id": "neuron_1",
+    "category": "Neuron & Synapse Models",
+    "framework": "Brian2",
+    "prompt": "Write Brian2 code to simulate a single LIF neuron receiving constant input current of 2 nA for 100 ms. Record and plot the membrane potential and spike times.",
+    "semantic_rules": [
+      "NeuronGroup",
+      "StateMonitor",
+      "SpikeMonitor",
+      "run(",
+      "100*ms",
+      "2*nA",
+      "plot"
+    ],
+    "response": "import brian2 as b2\nimport numpy as np\nimport matplotlib.pyplot as plt\n\n# Define the neuron model\neqs = {'v': b2.SolveODEGroup equation=b2.Vm(b2.I v=2e-9)}\n\n# Define the simulation parameters\nsim_params = {\n    't_eval': b2.time.brian2_units('ms', [100]),\n    'dt': b2.time.brian2_units('ms', 0.1),\n    'noise': b2.GaussianWhiteNoise(0*b2.units.V, b2.time.brian2_units('ms', 0.01))\n}\n\n# Create the simulator and run the simulation\nsim = b2.Simulator(eqs, sim_params)\nrun = sim.run()\n\n# Record the membrane potential and spike times\nmem_potential = run.record('v')\nspike_times = run.record('spike_events', record_event=True, timing=True)\n\n# Plot the results\nplt.figure(figsize=(12, 6))\nplt.subplot(121)\nplt.plot(run.time, mem_potential.record(), label='Membrane Potential')\nplt.xlabel('Time (ms)')\nplt.ylabel('Membrane Potential (V)')\nplt.title('Membrane Potential')\nplt.legend()\n\nplt.subplot(122)\nplt.plot(spike_times.record(), np.ones_like(spike_times.record())*10, label='Spike Times')\nplt.xlabel('Spike Index')\nplt.ylabel('Spike Time (ms)')\nplt.title('Spike Times')\nplt.legend()\n\nplt.tight_layout()\nplt.show()"
+  },
+  {
+    "id": "neuron_2",
+    "category": "Neuron & Synapse Models",
+    "framework": "snnTorch",
+    "prompt": "Using snnTorch, create a LIF neuron layer that receives random input of size [32, 100] for 50 time steps. Record spike outputs.",
+    "semantic_rules": [
+      "snn.Leaky",
+      "torch.rand",
+      "spk_rec",
+      "range(50)"
+    ],
+    "response": "import torch\nimport numpy as np\nimport matplotlib.pyplot as plt\n\n# Set seed for reproducibility\ntorch.manual_seed(0)\nnp.random.seed(0)\n\n# Define parameters\ninput_size = 32\noutput_size = 100\ntime_steps = 50\nV Reset = -70\nV_th = 30\ntau_m = 10\ntau_i = 0.05\ndt = 0.01\n\n# Initialize LIF neuron layer\nclass LIFNeuron:\n    def __init__(self, input_size, output_size, V_reset, V_threshold, tau_m, tau_i, dt):\n        self.V = torch.zeros((output_size,))\n        self.I = torch.zeros((output_size,))\n        self.m = torch.zeros((output_size,))\n        self.tau_m = tau_m\n        self.V_reset = V_reset\n        self.V_threshold = V_threshold\n        self.dt = dt\n\n    def integrate(self, V, I):\n        self.m = (1 - self.dt / self.tau_m) * self.m + self.dt / self.tau_m * V + I\n        return self.m\n\n    def spike(self):\n        if self.m >= self.V_threshold:\n            self.m = self.V_reset\n            return 1\n        return 0\n\n    def forward(self, inputs):\n        self.V = self.integrate(self.V, inputs)\n        spikes = torch.zeros_like(inputs)\n        for i in range(self.V.shape[0]):\n            spikes[i] = self.spike()\n        return spikes\n\n# Create LIF neuron layer\nlif_neuron = LIFNeuron(input_size, output_size, V_reset, V_th, tau_m, tau_i, dt)\n\n# Initialize input tensor\ninput_tensor = torch.randn([1, time_steps, input_size])\n\n# Create spike output tensor\nspike_output = lif_neuron(input_tensor)\n\n# Plot spike outputs\nplt.figure(figsize=(10, 6))\nplt.plot(spike_output[0, :].numpy())\nplt.xlabel('Time step')\nplt.ylabel('Spike')\nplt.title('Spike Outputs')\nplt.show()"
+  },
+  {
+    "id": "neuron_3",
+    "category": "Neuron & Synapse Models",
+    "framework": "Brian2",
+    "prompt": "Simulate two LIF neurons connected by a synapse with weight 0.5 nS. Drive the first neuron with a current pulse and record both membrane potentials.",
+    "semantic_rules": [
+      "NeuronGroup",
+      "Synapses",
+      "StateMonitor",
+      "run(",
+      "0.5*nS",
+      "TimedArray"
+    ],
+    "response": "import numpy as np\n\n# Define the parameters\ntau_m = 10  # membrane time constant of the neuron\ntau_r = 5   # recovery time constant of the neuron\nC = 1e-10  # membrane capacitance\nI_syn = 0.5  # synaptic weight (nS)\nI_ex = 1e-4  # external current (nA)\n\n# Generate a time array\nt = np.linspace(0, 100, 1000)\n\n# Initialize the membrane potentials\nV_m1 = 0\nV_m2 = 0\n\n# Record the membrane potentials\nfor dt in t:\n    # Compute the current due to the external current\n    I = I_ex\n\n    # Update the membrane potential of the first neuron\n    V_m1 += dt * (I - I_syn * (V_m1 - V_m2)) / C\n\n    # Compute the current due to the synaptic connection\n    I_synaptic = I_syn * (V_m2 - V_m1) / tau_m\n\n    # Update the membrane potential of the second neuron\n    V_m2 += dt * (-I_synaptic) / C\n\n    # Record the membrane potentials\n    membrane_potentials = np.array([V_m1, V_m2])\n    np.save('membrane_potentials.npy', membrane_potentials)"
+  },
+  {
+    "id": "neuron_4",
+    "category": "Neuron & Synapse Models",
+    "framework": "Norse",
+    "prompt": "Implement a single LIF layer in Norse. Feed it random spikes (batch 16, 20 time steps, 10 features) and print spike outputs.",
+    "semantic_rules": [
+      "norse.torch",
+      "LIFCell",
+      "torch.randn",
+      "(16, 20, 10)"
+    ],
+    "response": "import numpy as np\nimport matplotlib.pyplot as plt\n\nclass LIF:\n    def __init__(self, V_Threshold=1.0, V Reset=0.0, I_Threshold=0.0, I Spike=1.0):\n        self.V = np.zeros((10, 20))  # 10 neurons, 20 time steps\n        self.I = np.zeros((10, 20))  # 10 neurons, 20 time steps\n        self.V_threshold = V_Threshold\n        self.V_reset = V Reset\n        self.I_threshold = I_Threshold\n        self.I_spike = I Spike\n\n    def integrate(self, I):\n        \"\"\"Integrate the input and update V\"\"\"\n        self.V += I\n\n    def spike(self):\n        \"\"\"Generate a spike if V exceeds threshold\"\"\"\n        self.V = np.maximum(self.V, self.V_reset)  # reset V to V_reset\n        self.V[self.V > self.V_threshold] = self.V_threshold  # set V to V_threshold\n\n    def __call__(self, I):\n        \"\"\"Feed the input and spike\"\"\"\n        self.integrate(I)\n        self.spike()\n\n    def get_V(self):\n        \"\"\"Get the current V\"\"\"\n        return self.V\n\n# Generate random spike inputs\nnp.random.seed(0)\nI = np.random.rand(16, 20, 10)\n\n# Create a LIF layer\nlif = LIF()\n\n# Run the LIF layer\nfor t in range(20):\n    print(\"Time step:\", t)\n    lif()\n    V = lif.get_V()\n    print(\"V:\", V)\n    print(\"\\n\")"
+  },
+  {
+    "id": "neuron_5",
+    "category": "Neuron & Synapse Models",
+    "framework": "Brian2",
+    "prompt": "Simulate a Hodgkin-Huxley neuron in Brian2 with sinusoidal current input for 200 ms. Plot voltage trace and mark spikes.",
+    "semantic_rules": [
+      "NeuronGroup",
+      "StateMonitor",
+      "SpikeMonitor",
+      "sin(2*pi",
+      "plot"
+    ],
+    "response": "import brian2 as b2\nimport numpy as np\nimport matplotlib.pyplot as plt\n\n# Define constants\ng_L = 0.03  # leak conductance\ng_Na = 120  # sodium conductance\ng_K = 0.5  # potassium conductance\ng_Ca = 0.125  # calcium conductance\nC = 1.0  # capacitance\nE_L = -65.8  # resting membrane potential\nE_Na = 55.0  # sodium threshold\nE_K = -77.0  # potassium threshold\nE_Ca = 0.1  # calcium threshold\nV = -0.1  # initial voltage\nt = 200 * b2.ms  # duration of the simulation\ntau_Na = 50 * b2.ms  # time constant of sodium channel\ntau_K = 150 * b2.ms  # time constant of potassium channel\ntau_Ca = 0.1 * b2.ms  # time constant of calcium channel\n\n# Define the Hodgkin-Huxley equation\ndef hh_equations(group):\n    dV/dt = (group['V'] - E_L) / C + (group['I_Na'] + group['I_K'] + group['I_Ca']) / C\n\n    group['dV_Na'] = (E_Na - V) / tau_Na * (1 - np.exp(-(V - E_Na) / tau_Na))\n    group['dV_K'] = (E_K - V) / tau_K * (1 - np.exp(-(V - E_K) / tau_K))\n    group['dV_Ca'] = (E_Ca - V) / tau_Ca * np.exp(-V / tau_Ca)\n\n    group['dI_Na'] = g_Na * dV_Na\n    group['dI_K'] = g_K * dV_K\n    group['dI_Ca'] = g_Ca * dV_Ca\n\n# Create a neuron group\ngroup = b2 NeuronGroup('neuron', 'dV/dt: I_Na, I_K, I_Ca', threshold='V >= E_Na', model=hh_equations)\n\n# Create a sinusoidal current source\nI = b2.Pulse(10*b2.mV, duration=200*b2.ms)\n\n# Connect the current source to the neuron group\ngroup.add_input(I)\n\n# Run the simulation\ngroup.run()\n\n# Plot the voltage trace and mark spikes\nplt.plot(group.v.get(), group.v.get_time(), color='b')\nspikes = group.event_groups spike_time\nplt.scatter(spike_time, spike_time, c='r')\nplt.xlabel('Time (ms)')\nplt.ylabel('Voltage (mV)')\nplt.title('Hodgkin-Huxley neuron with sinusoidal current input')\nplt.show()"
+  },
+  {
+    "id": "neuron_6",
+    "category": "Neuron & Synapse Models",
+    "framework": "Brian2",
+    "prompt": "Simulate a group of 5 Poisson neurons driving a single LIF neuron in Brian2 for 300 ms. Plot spike raster.",
+    "semantic_rules": [
+      "PoissonGroup",
+      "NeuronGroup",
+      "SpikeMonitor",
+      "300*ms",
+      "plot"
+    ],
+    "response": "import brian2 as b2\nimport numpy as np\nimport matplotlib.pyplot as plt\n\n# Define the parameters\nneuron_params = {\n    'C': 1.0,  # membrane capacity\n    'V recharge': 1.0,  # membrane recharge value\n    'V_reset': 0.0,  # membrane reset value\n    'V_threshold': -20.0,  # threshold for firing\n    'V_rest': -80.0,  # resting membrane potential\n    'tau_e': 10.0,  # excitatory synaptic time constant\n    'tau_i': 5.0,  # inhibitory synaptic time constant\n}\n\nsynapse_params = {\n    'C': 1.0,  # synaptic capacity\n    'tau_e': 10.0,  # excitatory synaptic time constant\n    'tau_i': 5.0,  # inhibitory synaptic time constant\n    'v0': 10.0,  # synaptic input\n}\n\ngroup_size = 5\n\n# Create the groups of neurons and synapses\nneuron_group = b2.PopulationGroup(size=1, neuron=b2.LeakyIntegrateAndFire(**neuron_params))\nsynapse_group = b2.PopulationGroup(size=group_size, neuron=b2.LeakyIntegrateAndFire(**synapse_params))\n\n# Create connections between the groups\nfor i in range(group_size):\n    neuron_group.connect synapse_group[i], 'excitatory'\n\n# Create a spike generator for the Poisson neuron group\npoisson_neuron_group = b2.PopulationGroup(size=1, neuron=b2.PoissonStochastic(**{'input_rate': 10.0}))\n\n# Define the recording group\nrecording_group = b2.SpikeSourceMonitor('spikes')\n\n# Set up the simulation\ntimescale = 1.0 / 1000.0  # set time resolution\ndt = 1.0 / 1000.0  # set time step\nt_max = 300.0  # set simulation duration\ntr = b2.NumpyArrayRecorder(recording_group, dt=dt)\n\n# Run the simulation\nrun(b2.Simulator(neuron_group, synapse_group, poisson_neuron_group, recording_group, dt=dt, t_max=t_max).run()\n\n# Plot the spike raster\nspikes = recording_group SpikeSourceMonitor().spiketimes\nplt.plot(spike_times=spikes, marker='o', linestyle='None')\nplt.xlabel('Time (ms)')\nplt.ylabel('Spike Number')\nplt.title('Spike Raster')\nplt.show()"
+  },
+  {
+    "id": "neuron_7",
+    "category": "Neuron & Synapse Models",
+    "framework": "snnTorch",
+    "prompt": "Build an snnTorch model with two stacked LIF layers. Pass random binary input spikes and plot spike count per neuron.",
+    "semantic_rules": [
+      "snn.Leaky",
+      "torch.rand",
+      "spk_rec",
+      "plt.bar"
+    ],
+    "response": "import torch\nimport torch.nn as nn\nimport torch.nn.functional as F\nimport numpy as np\nimport matplotlib.pyplot as plt\n\n# Set the seed for reproducibility\ntorch.manual_seed(0)\n\n# Define the LIF neuron model\nclass LIF(nn.Module):\n    def __init__(self):\n        super(LIF, self).__init__()\n        self.voltage = nn.Parameter(torch.zeros(1))\n        self.refractory_period = nn.Parameter(torch.zeros(1))\n        self.time_constant = nn.Parameter(torch.ones(1))\n        \n    def forward(self, x):\n        # Calculate the membrane potential\n        self.voltage = self.voltage + x * self.time_constant\n        self.voltage = torch.clamp(self.voltage, min=0)\n        \n        # If the voltage has reached the threshold\n        if self.voltage >= 1:\n            self.voltage = 1\n            self.refractory_period -= self.time_constant\n            self.refractory_period = torch.clamp(self.refractory_period, min=0)\n        else:\n            self.refractory_period -= self.time_constant\n        \n        # Update the refractory period\n        if self.voltage < 0:\n            self.refractory_period = torch.clamp(self.refractory_period, min=0)\n        \n        return self.voltage\n\n# Define the SNN model with two stacked LIF layers\nclass SNN(nn.Module):\n    def __init__(self):\n        super(SNN, self).__init__()\n        self.layer1 = nn.ModuleList([LIF() for _ in range(10)])\n        self.layer2 = nn.ModuleList([LIF() for _ in range(10)])\n        \n    def forward(self, x):\n        for neuron in self.layer1:\n            x = neuron(x)\n        for neuron in self.layer2:\n            x = neuron(x)\n        return x\n\n# Create an instance of the SNN model\nsnn = SNN()\n\n# Generate random binary input spikes\ninput_spikes = torch.randn(100, 10) > 0\n\n# Initialize the output spikes for each neuron\noutput_spikes = torch.zeros(10)\n\n# Iterate over the input spikes and update the output spikes\nfor i, spike in enumerate(input_spikes):\n    for neuron_idx, neuron in enumerate(snn.layer2):\n        output_spikes[neuron_idx] += (snn.layer1[0](spike) > 0).int()\n\n# Plot the spike count per neuron\nplt.bar(range(10), output_spikes.cpu().numpy())\nplt.xlabel('Neuron Index')\nplt.ylabel('Spike Count')\nplt.title('Spike Count per Neuron')\nplt.show()"
+  },
+  {
+    "id": "neuron_8",
+    "category": "Neuron & Synapse Models",
+    "framework": "Brian2",
+    "prompt": "Create a Brian2 simulation of an Izhikevich neuron receiving step input current. Plot the firing pattern.",
+    "semantic_rules": [
+      "NeuronGroup",
+      "StateMonitor",
+      "TimedArray",
+      "plot"
+    ],
+    "response": "from brian2 import *\n\n# Parameters\neqs = '''\n    dv/dt = (0.03*v + I : si units (Hz)\n            + 80*(1 - v + I) : si units (Hz)\n            - 0.9*v) / tau : si units (s)\n'''\n\n# Neuron parameters\nI0 = 0  # Resting potential\nv_rest = -65  # Resting potential\nv_threshold = -55  # Threshold potential\ntau = 0.04  # Time constant\n\n# Create the neuron model\nneuron = NeuronGroup('neuron', eqs=eqs,\n                    model=IntrinsicNeuronModel(u0=v_rest, I0=I0, C=1e-4),\n                    threshold=Threshold(v_threshold),\n                    reset=Eq(v, v_rest),\n                    integrate= integrate.odeint,\n                    methods={'v': 'solve_ivp'),\n                    ordering=('v',))\n\n# Create a step input current\ninput_current = SpikeSourceSpikeRate(10, 0.1)  # 10 Hz, 10 ms duration\ninput_current.schedule('t >= 0', Input(current=1))\n\n# Run the simulation\nneuron.execute()\n\n# Plot the firing pattern\nplt.plot(neuron.v.t, neuron.v)\nplt.xlabel('Time (s)')\nplt.ylabel('Membrane Potential (mV)')\nplt.title('Izhikevich neuron with step input current')\nplt.show()"
+  },
+  {
+    "id": "neuron_9",
+    "category": "Neuron & Synapse Models",
+    "framework": "Brian2",
+    "prompt": "Write Brian2 code for 10 LIF neurons connected in a chain (1?2?3...). Apply input to the first neuron and plot spike propagation.",
+    "semantic_rules": [
+      "NeuronGroup",
+      "Synapses",
+      "SpikeMonitor",
+      "i==j-1",
+      "plot"
+    ],
+    "response": "import numpy as np\nimport matplotlib.pyplot as plt\n\n# Define parameters\nn_neurons = 10\ntau_r = 20  # refractory period\ntau_m = 10  # adaptation time constant\nV_th = 1.5  # threshold potential\nV_rest = -70  # resting potential\nV_in = -0.5  # external input\nI_ext = 0  # external input\n\n# Initialize neurons\nneurons = [np.zeros((1,)) for _ in range(n_neurons)]\n\n# Initialize spike times\nspike_times = []\n\n# Simulate\nfor i in range(10000):  # simulate for 10 seconds\n    # Compute the input to each neuron\n    inputs = np.zeros(n_neurons)\n    for j, neuron in enumerate(neurons):\n        if j == 0:\n            inputs[j] = V_in\n        else:\n            inputs[j] = inputs[j-1]\n\n    # Update membrane potential\n    for j, neuron in enumerate(neurons):\n        V = neuron\n        dVdt = (inputs[j] - V) / tau_m\n        dVdt[neuron==V_rest] = 0  # prevent division by zero\n        V = V + dVdt * 0.01  # approximate dV/dt\n        V[neuron==V_rest] = V_rest  # keep V_rest at rest\n        if V >= V_th:\n            V = V_th\n            spike_times.append(i)\n            neurons[j] = V_rest  # reset V after spike\n        else:\n            neurons[j] = V\n\n# Plot spike propagation\nplt.figure(figsize=(10,6))\nplt.plot(spike_times)\nplt.xlabel('Time (ms)')\nplt.ylabel('Spike Index')\nplt.title('Spike Propagation in LIF Chain')\nplt.show()\n\n# Print spike times\nprint(\"Spike times:\", spike_times)\n\n# Plot spike rates\nrates = [len([x for x in spike_times if x < 10000]) / 10000 for _ in range(100)]\nplt.figure(figsize=(10,6))\nplt.plot(rates)\nplt.xlabel('Time (s)')\nplt.ylabel('Spike Rate')\nplt.title('Spike Rate Over Time')\nplt.show()"
+  },
+  {
+    "id": "neuron_10",
+    "category": "Neuron & Synapse Models",
+    "framework": "Norse",
+    "prompt": "Create a Norse-based LIF neuron that integrates inputs over 50 steps. Provide random torch input and return voltage states.",
+    "semantic_rules": [
+      "norse.torch",
+      "LIFCell",
+      "torch.randn",
+      "range(50)",
+      "state.v"
+    ],
+    "response": "import torch\nimport numpy as np\n\nclass LIFNeuron:\n    def __init__(self, tau, E_refractory, C_m, V_rest, V_reset):\n        \"\"\"\n        Initialize a LIF neuron.\n\n        Parameters:\n        tau (float): Time constant for integration\n        E_refractory (float): Threshold potential for firing\n        C_m (float): Membrane capacitance\n        V_rest (float): Resting potential\n        V_reset (float): Reset potential\n        \"\"\"\n        self.tau = tau\n        self.E_refractory = E_refratory\n        self.C_m = C_m\n        self.V_rest = V_rest\n        self.V_reset = V_reset\n        self.V = torch.zeros(1)  # initial membrane potential\n        self.t = 0  # time\n\n    def integrate(self, input_signal):\n        \"\"\"\n        Integrate the input signal.\n\n        Parameters:\n        input_signal (torch.Tensor): Input signal\n\n        Returns:\n        torch.Tensor: Membrane potential at the next time step\n        \"\"\"\n        if self.t == 0:\n            self.V = self.V_rest\n            self.t = 0\n        else:\n            self.V += input_signal * self.tau / self.C_m\n            if self.V >= self.E_refratory:\n                self.V = self.V_reset\n                self.t = 0\n        self.t += 1\n        return self.V\n\n# Set parameters\ntau = 10.0\nE_refratory = -65.0\nC_m = 1.0\nV_rest = -65.0\nV_reset = -50.0\n\n# Create a neuron\nneuron = LIFNeuron(tau, E_refratory, C_m, V_rest, V_reset)\n\n# Generate random input signal\ninput_signal = torch.randn(50)\n\n# Integrate the input signal\nmembrane_potentials = torch.zeros(50)\nfor i in range(50):\n    membrane_potentials[i] = neuron.integrate(input_signal)\n\nprint(membrane_potentials)"
+  },
+  {
+    "id": "neuron_11",
+    "category": "Neuron & Synapse Models",
+    "framework": "Brian2",
+    "prompt": "Model an adaptive exponential integrate-and-fire neuron in Brian2 with step input current. Plot membrane voltage over 200 ms.",
+    "semantic_rules": [
+      "NeuronGroup",
+      "StateMonitor",
+      "exp(",
+      "200*ms",
+      "plot"
+    ],
+    "response": "import brian2 as b2\nimport numpy as np\nimport matplotlib.pyplot as plt\n\n# Set the parameters\nn_exponent = 0.5  # adaptation exponent\nIstep = 1.0  # step current amplitude\nI_inj = 1.0  # injection current\nT = 200 * b2.ms  # simulation time\n\n# Create a neuron model\neqs = [\n    b2.SpikeResponseEquation(v=0, dvt=0, d2t=0),\n    b2.Integrate(v, dt=0.01 * b2.ms),\n    b2.Projection(\n        synapses=b2.Synapses(\n            synapses=b2.Synapses(\n                connections=b2.Connections(\n                    source=b2.Source(0, 0.5),\n                    target=b2.Destination(0, 0.5)\n                )\n            ),\n            receptor=b2.Receptor(\n                receptor=b2.Rod(\n                    receptor=b2.Receptor(\n                        pot=b2.Potential(0),\n                        nEx=0.5,\n                        nInj=0.5,\n                        nE=0.5\n                    )\n                )\n            ),\n            rule=b2.BIC\n        ),\n        rule=b2.AdaptiveExponential(I=Istep, nEx=n_exponent)\n    )\n]\n\n# Initialize the neuron\nneuron = b2.Neuron(eqs=eqs, membrane_time_constant=20 * b2.ms)\n\n# Set the initial conditions\nv = b2.State(b2.V(0), t0=0)\n\n# Run the simulation\nrecorders = [b2.State recorder(b2.V, t0=0, dt=0.01 * b2.ms, stop=T)]\nrun(neuron, recorders)\n\n# Plot the results\nfor recorder in recorders:\n    plt.plot(recorder.t, recorder.v, label='v')\nplt.xlabel('Time (ms)')\nplt.ylabel('Membrane Voltage (mV)')\nplt.title('Adaptive Exponential Integrate-and-Fire Neuron')\nplt.legend()\nplt.show()"
+  },
+  {
+    "id": "neuron_12",
+    "category": "Neuron & Synapse Models",
+    "framework": "Brian2",
+    "prompt": "Simulate a pair of inhibitory and excitatory neurons connected in Brian2. Apply Poisson input and plot spikes.",
+    "semantic_rules": [
+      "NeuronGroup",
+      "Synapses",
+      "PoissonGroup",
+      "SpikeMonitor",
+      "plot"
+    ],
+    "response": "import brian2 as b2\nimport numpy as np\nimport matplotlib.pyplot as plt\n\n# Define the parameters\nsim_time = 1000 ms\ndt = 0.1 ms\nnum_steps = int(sim_time / dt)\nexcitatory_synaptic_time_constant = 5 ms\ninhibitory_synaptic_time_constant = 10 ms\n\n# Create a default world\nw = b2.World()\n\n# Create neurons\nexcitatory_neuron = b2.NeuronGroup('excitatory', model=b2.SpikeModel(), threshold='0.5', membrane_time_constant=10 ms)\ninhibitory_neuron = b2.NeuronGroup('inhibitory', model=b2.SpikeModel(), threshold='0.5', membrane_time_constant=10 ms)\n\n# Create synapses\nexcitatory_synapses = b2.Synapses(excitatory_neuron, excitatory_neuron, 'excitatory_synapse', delayed=excitatory_synaptic_time_constant ms, w=1, synapses_type=b2.Poisson())\ninhibitory_synapses = b2.Synapses(excitatory_neuron, inhibitory_neuron, 'inhibitory_synapse', delayed=inhibitory_synaptic_time_constant ms, w=-1, synapses_type=b2.Poisson())\n\n# Set up the world\nw.connect(excitatory_synapses)\nw.connect(inhibitory_synapses)\n\n# Create a Poisson source to apply input to the neurons\ninput_source = b2.PopulationGroup(b2.SpikeSourcePoisson, 'excitatory', rate=10 Hz)\n\n# Set up the initial conditions\nexcitatory_neuron.m = 1.0\ninhibitory_neuron.m = 1.0\nexcitatory_neuron.v = 0.0\ninhibitory_neuron.v = 0.0\n\n# Run the simulation\nwith b2.Nest:\n    world = w.run(dt=dt, until=seconds(sim_time))\n    spikes = world.get('excitatory', 'spikes')\n    inhibitory_spikes = world.get('inhibitory', 'spikes')\n\n# Plot the spikes\nplt.figure(figsize=(10, 5))\n\nplt.subplot(121)\nplt.plot(spikes.t, spikes.i)\nplt.title('Excitatory Neuron Spikes')\nplt.xlabel('Time (ms)')\nplt.ylabel('Neuron Index')\n\nplt.subplot(122)\nplt.plot(inhibitory_spikes.t, inhibitory_spikes.i)\nplt.title('Inhibitory Neuron Spikes')\nplt.xlabel('Time (ms)')\nplt.ylabel('Neuron Index')\n\nplt.tight_layout()\nplt.show()"
+  },
+  {
+    "id": "neuron_13",
+    "category": "Neuron & Synapse Models",
+    "framework": "snnTorch",
+    "prompt": "Construct a LIF neuron layer in snnTorch with time constant 20 ms. Feed random input and plot spiking activity.",
+    "semantic_rules": [
+      "snn.Leaky",
+      "beta=",
+      "torch.rand",
+      "plt.plot"
+    ],
+    "response": "import torch\nimport numpy as np\nimport matplotlib.pyplot as plt\n\n# Set the seed for reproducibility\ntorch.manual_seed(0)\nnp.random.seed(0)\n\n# Define the LIF neuron model\nclass LIFNeuron:\n    def __init__(self, tau, v_reset):\n        self.tau = tau\n        self.v_reset = v_reset\n        self.v = torch.zeros(1)\n        self.Vm = torch.zeros(1)\n\n    def integrate(self, dt, input):\n        self.v += input * dt\n        self.Vm = torch.min(self.v, self.v_reset)  # integrate to Vm\n\n    def spike(self):\n        if self.Vm > 0:\n            self.v = self.v_reset\n            self.Vm = torch.zeros(1)\n            return 1\n        return 0\n\n    def reset(self):\n        self.v = torch.zeros(1)\n        self.Vm = torch.zeros(1)\n\n# Create a LIF neuron with tau = 20 ms and v_reset = -70 mV\ntau = 20  # time constant in milliseconds\nv_reset = -70  # resting membrane potential in mV\nneuron = LIFNeuron(tau, v_reset)\n\n# Create a random input with a mean of 0 and a standard deviation of 10\ninput = torch.randn(100) * 10\n\n# Set the time step and total time\ndt = 0.01  # time step in milliseconds\ntotal_time = 100  # total time in milliseconds\n\n# Create an array to store the spike activity\nspike_activity = torch.zeros(int(total_time / dt))\n\n# Simulate the neuron activity\nfor t in range(int(total_time / dt)):\n    # Integrate the neuron\n    neuron.integrate(dt, input[t])\n    # Check if the neuron has spiked\n    spike = neuron.spike()\n    # Store the spike activity\n    spike_activity[t] = spike\n\n# Plot the spike activity\nplt.plot(spike_activity)\nplt.xlabel('Time (ms)')\nplt.ylabel('Spike Activity')\nplt.title('LIF Neuron Spike Activity')\nplt.show()"
+  },
+  {
+    "id": "neuron_14",
+    "category": "Neuron & Synapse Models",
+    "framework": "Brian2",
+    "prompt": "Implement a conductance-based LIF neuron model in Brian2. Drive it with current pulses and record voltage.",
+    "semantic_rules": [
+      "NeuronGroup",
+      "StateMonitor",
+      "ge",
+      "gi",
+      "TimedArray"
+    ],
+    "response": "import brian2 as b2\nimport numpy as np\n\n# Define the neuron model\neqs = [\n    b2.SpikeRateEquation(),\n    b2.Integrate1p3NeuronEquations(v0=-65, E_L=-55, I_ex=10, tau_m=5, tau_r=10, tau_ref=1)\n]\n\n# Create a neuron population\nneuron = b2.Population(10, b2.NeuronGroup(size=1, neuron_model=eqs), synapses=b2.Synapses(\n    groups={'A': 'A', 'B': 'B'},\n    connection_rule=b2.StaticSynapses(\n        pre='A', post='B',\n        strength=0.1,\n        synapses=[b2.StaticSynapses(\n            pre='A', post='B',\n            strength=0.1\n        )],\n        post='B'\n    )\n))\n\n# Create a world\nworld = b2.World()\n\n# Create a stimulus generator\nstimulus = b2.CurrentSourceGroup('stimulus', tau=10, spike_threshold=20, duration=100)\nworld.add(stimulus)\n\n# Set up the simulation\nworld.record('v')\nworld.run(1e3)"
+  },
+  {
+    "id": "neuron_15",
+    "category": "Neuron & Synapse Models",
+    "framework": "Norse",
+    "prompt": "Create a Norse spiking feedforward model with two LIF layers, 10 hidden units each. Run 30 time steps.",
+    "semantic_rules": [
+      "norse.torch",
+      "LIFCell",
+      "nn.Linear",
+      "range(30)"
+    ],
+    "response": "import torch\nimport torch.nn as nn\nimport torch.nn.functional as F\n\n# Define a LIF cell class\nclass LIF(nn.Module):\n    def __init__(self, in_features, out_features, tau_e, tau_f, leak):\n        super(LIF, self).__init__()\n        self.in_features = in_features\n        self.out_features = out_features\n        self.tau_e = tau_e\n        self.tau_f = tau_f\n        self.leak = leak\n        self.v = nn.Parameter(torch.zeros(out_features))\n        self.reset_v = nn.Parameter(torch.zeros(out_features))\n\n    def forward(self, x):\n        # Calculate the new membrane potential\n        v_new = self.v.clone()\n        v_new += (1 - self.leak) * x\n\n        # Calculate the spiking rate\n        rate = (v_new - self.reset_v) / (self.tau_f - self.tau_e)\n\n        # Apply threshold to determine spikes\n        spikes = (v_new >= 1).float()\n\n        # Update the membrane potential\n        self.v = (1 - self.leak) * v_new + self.leak * self.reset_v\n\n        return spikes\n\n# Define the feedforward network with two LIF layers\nclass FeedforwardLIF(nn.Module):\n    def __init__(self, input_dim, hidden_dim, output_dim):\n        super(FeedforwardLIF, self).__init__()\n        self.fc1 = nn.Linear(input_dim, hidden_dim)\n        self.lif1 = LIF(hidden_dim, hidden_dim, tau_e=10, tau_f=30, leak=0.05)\n        self.fc2 = nn.Linear(hidden_dim, output_dim)\n\n    def forward(self, x):\n        x = F.relu(self.fc1(x))\n        x = self.lif1(x)\n        x = F.relu(self.fc2(x))\n        return x\n\n# Initialize the model, loss function and optimizer\nmodel = FeedforwardLIF(input_dim=10, hidden_dim=10, output_dim=10)\ncriterion = nn.MSELoss()\noptimizer = torch.optim.Adam(model.parameters(), lr=0.01)\n\n# Run 30 time steps\nfor step in range(30):\n    # Generate random input and target\n    input_data = torch.randn(1, 10)\n    target = torch.randn(1, 10)\n\n    # Zero the gradients\n    optimizer.zero_grad()\n\n    # Forward pass\n    output = model(input_data)\n    loss = criterion(output, target)\n\n    # Backward pass\n    loss.backward()\n    optimizer.step()\n\n    # Print the loss at each step\n    print(f'Step {step+1}, Loss: {loss.item()}')"
+  },
+  {
+    "id": "neuron_16",
+    "category": "Neuron & Synapse Models",
+    "framework": "Brian2",
+    "prompt": "Write Brian2 code to simulate a group of 50 neurons, half excitatory, half inhibitory. Connect with 10% probability.",
+    "semantic_rules": [
+      "NeuronGroup",
+      "Synapses",
+      "SpikeMonitor",
+      "p=0.1",
+      "25"
+    ],
+    "response": "import numpy as np\nfrom scipy.integrate import odeint\nimport matplotlib.pyplot as plt\n\n# Define the model parameters\nN = 50\nn_excitatory = N // 2\nn_inhibitory = N - n_excitatory\nconn_prob = 0.1\n\n# Initialize the network\nweights = np.random.choice([-1, 1], size=(N, N), p=[0.5, 0.5])\nweights = (weights + weights.T) / 2  # make weights symmetric\nweights[weights == 1] = 1\nweights[weights == -1] = -1\n\n# Define the activation functions\ndef sigmoid(x):\n    return 1 / (1 + np.exp(-x))\n\ndef derivative(state, t, weights):\n    excitatory_sum = np.sum(weights[:, state] * state)\n    inhibitory_sum = np.sum(weights[state] * (1 - state))\n    d_state = np.sum(weights[state]) * (excitatory_sum - inhibitory_sum)\n    return d_state\n\n# Initialize the state of the neurons\nstate = np.zeros(N)\n\n# Simulate the network\nt = np.linspace(0, 100, 1000)\nsol = odeint(derivative, state, t, args=(weights,))\n\n# Plot the results\nplt.figure(figsize=(10, 6))\nplt.plot(t, sol[:, 0], label='Excitatory Neuron 0')\nplt.plot(t, sol[:, n_excitatory - 1], label='Inhibitory Neuron 0')\nplt.xlabel('Time')\nplt.ylabel('Neuron Activity')\nplt.title('Neural Network Simulation')\nplt.legend()\nplt.show()"
+  },
+  {
+    "id": "neuron_17",
+    "category": "Neuron & Synapse Models",
+    "framework": "Brian2",
+    "prompt": "Write Brian2 code to simulate a current-based synapse model connecting 3 neurons. Record post-synaptic potentials.",
+    "semantic_rules": [
+      "NeuronGroup",
+      "Synapses",
+      "StateMonitor",
+      "on_pre"
+    ],
+    "response": "import numpy as np\nimport matplotlib.pyplot as plt\n\n# Define the parameters\nR_A, R_B, R_C = 10, 15, 5  # resting potentials of the neurons\nI_A, I_B, I_C = 1, 2, 3  # input currents\nC_syn = 0.01  # synaptic capacitance\ntau = 100  # time constant of the membrane time constant\nV_rest = 0  # resting membrane potential\nV_synapse = 0  # resting synaptic potential\nI_ex = 1  # external input\ndt = 0.01  # time step\n\n# Initialize arrays to store the recording data\nt = np.arange(0, 1000, dt)\nV_A = np.zeros(len(t))\nV_B = np.zeros(len(t))\nV_C = np.zeros(len(t))\nI_syn = np.zeros(len(t))\nV_post = np.zeros(len(t))\n\n# Set the initial conditions\nV_A[0] = R_A\nV_B[0] = R_B\nV_C[0] = R_C\n\n# Simulate the neuron A\nfor i in range(1, len(t)):\n    V_A[i] = V_rest + (V_A[i-1] + I_A * dt) * (1 - V_A[i-1] / tau)\n    \n    # Update the synaptic potential\n    I_syn[i] = (V_A[i-1] + V_B[i-1]) / C_syn\n    \n    # Update the postsynaptic neuron B\n    V_B[i] = V_rest + (V_B[i-1] + I_B * dt) * (1 - V_B[i-1] / tau)\n    \n    # Update the postsynaptic neuron C\n    V_C[i] = V_rest + (V_C[i-1] + I_C * dt) * (1 - V_C[i-1] / tau)\n    \n    # Update the postsynaptic neuron C with the synaptic input\n    V_post[i] = V_rest + (V_C[i-1] + I_syn[i-1]) * (1 - V_C[i-1] / tau)\n\n# Plot the recordings\nplt.figure(figsize=(12, 6))\nplt.subplot(1, 3, 1)\nplt.plot(t, V_A)\nplt.title('Neuron A')\nplt.xlabel('Time (ms)')\nplt.ylabel('V_A (mV)')\n\nplt.subplot(1, 3, 2)\nplt.plot(t, V_B)\nplt.title('Neuron B')\nplt.xlabel('Time (ms)')\nplt.ylabel('V_B (mV)')\n\nplt.subplot(1, 3, 3)\nplt.plot(t, V_post)\nplt.title('Postsynaptic Potential at Neuron C')\nplt.xlabel('Time (ms)')\nplt.ylabel('V_post (mV)')\n\nplt.tight_layout()\nplt.show()"
+  },
+  {
+    "id": "neuron_18",
+    "category": "Neuron & Synapse Models",
+    "framework": "snnTorch",
+    "prompt": "Implement a simple autoencoder-like SNN with one input LIF layer and one output LIF layer in snnTorch. Train for one iteration.",
+    "semantic_rules": [
+      "snn.Leaky",
+      "loss.backward",
+      "optimizer.step",
+      "nn.Linear"
+    ],
+    "response": "import torch\nimport torch.nn as nn\nimport torch.nn.functional as F\nimport numpy as np\nimport matplotlib.pyplot as plt\n\n# SNN class\nclass SNN(nn.Module):\n    def __init__(self, input_size, hidden_size, output_size):\n        super(SNN, self).__init__()\n        self.input_lif = LIF(input_size, hidden_size)\n        self.output_lif = LIF(hidden_size, output_size)\n\n    def forward(self, x):\n        # Input LIF\n        h = self.input_lif(x)\n\n        # Output LIF\n        y = self.output_lif(h)\n\n        return y\n\n# LIF cell class\nclass LIF(nn.Module):\n    def __init__(self, input_size, output_size):\n        super(LIF, self).__init__()\n        self.w = nn.Parameter(torch.randn(input_size, output_size))\n        self.v = nn.Parameter(torch.zeros(output_size))\n        self.tau = 0.02\n\n    def forward(self, x):\n        # Calculate the membrane potential\n        m = torch.dot(x, self.w) + self.v\n\n        # Update the membrane potential\n        delta_m = (m + self.tau) * (F.relu(m) - m)\n        m = m + delta_m\n\n        # Calculate the output\n        y = F.sigmoid(m)\n\n        return y\n\n# Create the SNN\ninput_size = 10\nhidden_size = 20\noutput_size = 10\nsnn = SNN(input_size, hidden_size, output_size)\n\n# Initialize the weights\nsnn.input_lif.w.data.uniform_(-1, 1)\nsnn.input_lif.v.data.uniform_(-0.5, 0.5)\nsnn.output_lif.w.data.uniform_(-1, 1)\nsnn.output_lif.v.data.uniform_(-0.5, 0.5)\n\n# Train the SNN\nx = torch.randn(1, input_size)\ny = snn(x)\n\n# Print the output\nprint(y)\n\n# Plot the output\nplt.imshow(y.cpu().numpy().flatten(), cmap='RdYlGn')\nplt.title('SNN Output')\nplt.show()"
+  },
+  {
+    "id": "neuron_19",
+    "category": "Neuron & Synapse Models",
+    "framework": "Brian2",
+    "prompt": "Build a Brian2 model with a neuron receiving Poisson spike input. Plot spike train and voltage response.",
+    "semantic_rules": [
+      "NeuronGroup",
+      "PoissonGroup",
+      "SpikeMonitor",
+      "StateMonitor",
+      "plot"
+    ],
+    "response": "import numpy as np\nfrom brian2 import *\n\n# Set up the model\neqs = Equations(\n    v : Population(1, 'v') = 0.0,  # neuron's membrane potential\n    i : Synapses('C', 'v') = 0.0,  # synapse conductance\n    I : Monitors('v'),  # monitor the voltage of the neuron\n    spike : Monitors('spike')  # monitor the spike train\n)\n\n# Set up the synapses and the Poisson spike generator\nsynapses = Synapses(SpikeSourcePoisson(10), 1, 'w : synapse_weight')\nsynapses.connect('A', 'B')\n\n# Set up the neuron\nneuron = NeuronGroup(1, eqs=eqs, threshold='v : 0.5', method='euler', tIntegrationMethod='euler')\n\n# Set up the monitoring and simulation\nmonitor = Monitor(neuron, variables=['v', 'spike'], record_size='1s')\n\n# Set up the simulation\nsim = Simulation(neuron, synapses, monitor)\nsim.run(1.0*s second)\n\n# Plot the results\nplot(sim.get_data('v'), clear=True, figsize=(12, 4))\nxlabel('Time (s)')\nylabel('v (mV)')\ntitle('Neuron Voltage Response')\nplot(sim.get_data('spike'), clear=True, figsize=(12, 4))\nxlabel('Time (s)')\nylabel('Spike Train')\ntitle('Neuron Spike Train')\nshow()"
+  },
+  {
+    "id": "neuron_20",
+    "category": "Neuron & Synapse Models",
+    "framework": "Norse",
+    "prompt": "Create a Norse model with 5 LIF neurons, random torch input, and run 50 steps. Output spikes per neuron.",
+    "semantic_rules": [
+      "norse.torch",
+      "LIFCell",
+      "torch.randn",
+      "range(50)"
+    ],
+    "response": "import torch\nimport torch.nn as nn\nimport torch.nn.functional as F\nimport numpy as np\nimport matplotlib.pyplot as plt\n\n# LIF model\nclass LIF(nn.Module):\n    def __init__(self, n_neurons, tau, E, leak_current, spike_threshold, reset, input_shape):\n        super(LIF, self).__init__()\n        self.n_neurons = n_neurons\n        self.tau = tau\n        self.E = E\n        self.leak_current = leak_current\n        self.spike_threshold = spike_threshold\n        self.reset = reset\n        self.input_shape = input_shape\n        self.spikes = [0 for _ in range(n_neurons)]\n\n        self.weights = nn.Parameter(torch.randn(n_neurons, input_shape[1]))\n\n    def forward(self, x):\n        # Apply leaky integrate\n        self.voltage = (self.voltage * (1 - self.leak_current / self.tau) + x * self.weights).clamp(min=0)\n\n        # Fire if the voltage exceeds the threshold\n        if self.voltage > self.spike_threshold:\n            self.voltage = self.reset\n            self.spike = 1\n        else:\n            self.spike = 0\n\n        return self.voltage, self.spike\n\n# Initialize the model\nn_neurons = 5\ntau = 0.5\nE = 1.0\nleak_current = 0.01\nspike_threshold = 0.5\nreset = -0.8\ninput_shape = (10, 10)  # Replace with your input shape\nmodel = LIF(n_neurons, tau, E, leak_current, spike_threshold, reset, input_shape)\n\n# Initialize voltage and spike arrays\nvoltage = torch.zeros((50, n_neurons))\nspikes = torch.zeros((50, n_neurons))\n\n# Generate random input\ninput = torch.randn(50, *input_shape)\n\n# Run for 50 steps\nfor i in range(50):\n    # Generate input\n    input = input[i].unsqueeze(0)\n\n    # Forward pass\n    voltage, spikes = model(input)\n    \n    # Store spikes and voltage\n    spikes[i] = spikes\n    voltage[i] = voltage\n\n# Print spikes per neuron\nfor i in range(n_neurons):\n    print(f'Spike count for neuron {i}: {spikes[49, i].sum().item()}')\n\n# Plot spikes per neuron\nplt.figure(figsize=(10, 5))\nfor i in range(n_neurons):\n    plt.plot(spikes[:, i], label=f'Neuron {i}')\nplt.xlabel('Time Step')\nplt.ylabel('Spike Count')\nplt.title('Spike Count per Neuron')\nplt.legend()\nplt.show()"
+  },
+  {
+    "id": "learning_1",
+    "category": "Learning Rules",
+    "framework": "Brian2",
+    "prompt": "Implement STDP on a single synapse between two LIF neurons in Brian2. Run 200 ms and plot weight change.",
+    "semantic_rules": [
+      "Synapses",
+      "on_pre",
+      "on_post",
+      "w +=",
+      "200*ms",
+      "plot"
+    ],
+    "response": "import brian2 as b2\nimport numpy as np\nimport matplotlib.pyplot as plt\n\n# Define constants\nneuron1 = b2.SpikeSourcePoisson(rate=20, dt=0.01)\nneuron2 = b2.SpikeSourcePoisson(rate=20, dt=0.01)\nsynapse = b2.Synapse(neuron1=\"A\", neuron2=\"B\", synapse_rule=\"stdp\")\n\n# Define the initial weights\nweight = b2.Variable(0.0)\n\n# Run the simulation for 200 ms\nt = 200 * b2.ms\ngroup = b2.Group(name='A', neurons=neuron1, synapses=synapse)\ngroup.gain = 0.1\ngroup.dopamine = b2.Dopamine(type='Ca2', postsynaptic=True)\n\ngroup synapse_rule = b2.StdpRule()\ngroup synapse_rule.LTP_rule = b2.RuastanLTP_rule(r_plus=0.2, tau_plus=1000*b2.ms)\ngroup synapse_rule.LTP_threshold = 0.5\ngroup synapse_rule.LTP_multiplier = 0.05\n\n# Record the weight change over time\ngroup.record(weight)\n\n# Run the simulation\ngroup.run(t)\n\n# Plot the weight change\nweight_record = group.query(\"weight\").T\nplt.figure(figsize=(10,6))\nplt.plot(weight_record)\nplt.xlabel(\"Time (ms)\")\nplt.ylabel(\"Weight\")\nplt.title(\"STDP on a single synapse\")\nplt.show()"
+  },
+  {
+    "id": "learning_2",
+    "category": "Learning Rules",
+    "framework": "snnTorch",
+    "prompt": "Train a two-layer LIF network in snnTorch using surrogate gradient descent. Perform one training step on random data.",
+    "semantic_rules": [
+      "snn.Leaky",
+      "loss.backward",
+      "optimizer.step",
+      "torch.rand"
+    ],
+    "response": "import torch\nimport torch.nn as nn\nimport torch.optim as optim\nimport numpy as np\n\n# Set the seed for reproducibility\ntorch.manual_seed(0)\nnp.random.seed(0)\n\n# Define the parameters of the LIF network\ninput_size = 100\nhidden_size = 50\noutput_size = 10\n\n# Initialize the weights and biases of the LIF network\ninput_weights = torch.randn(input_size, hidden_size)\ninput_bias = torch.zeros(hidden_size)\nhidden_weights = torch.randn(hidden_size, output_size)\nhidden_bias = torch.zeros(output_size)\n\n# Define the leaky integrate and fire (LIF) layer\nclass LIF(nn.Module):\n    def __init__(self, input_size, hidden_size, output_size, tau=0.1):\n        super(LIF, self).__init__()\n        self.input_weights = nn.Linear(input_size, hidden_size)\n        self.input_bias = nn.Parameter(torch.randn(hidden_size))\n        self.hidden_weights = nn.Linear(hidden_size, output_size)\n        self.hidden_bias = nn.Parameter(torch.zeros(output_size))\n        self.tau = tau\n\n    def forward(self, x):\n        # Compute the input to the integrate node\n        integrated_output = torch.relu(self.input_weights @ x + self.input_bias)\n\n        # Compute the output of the integrate node\n        threshold = self.hidden_bias + torch.sqrt(self.tau * integrated_output)\n\n        # Compute the output of the fire node\n        output = torch.where(integrated_output > threshold, self.hidden_weights @ integrated_output, self.hidden_bias)\n\n        return output\n\n# Initialize the LIF network\nlif_network = LIF(input_size, hidden_size, output_size)\n\n# Initialize the loss function and the optimizer\ncriterion = nn.CrossEntropyLoss()\noptimizer = optim.SGD(lif_network.parameters(), lr=0.01)\n\n# Generate random data\nx = torch.randn(1, input_size)\ny = torch.randint(0, output_size, (1,))\n\n# Perform one training step\noptimizer.zero_grad()\noutput = lif_network(x)\nloss = criterion(output, y)\nloss.backward()\noptimizer.step()\n\nprint(\"Output:\", output)\nprint(\"Loss:\", loss.item())"
+  },
+  {
+    "id": "learning_3",
+    "category": "Learning Rules",
+    "framework": "Brian2",
+    "prompt": "Write Brian2 code for pair-based STDP between 10 presynaptic and 1 postsynaptic neuron. Plot synaptic weight changes.",
+    "semantic_rules": [
+      "Synapses",
+      "on_pre",
+      "on_post",
+      "w +=",
+      "plot"
+    ],
+    "response": "import numpy as np\nimport matplotlib.pyplot as plt\n\n# Number of presynaptic neurons\nn_presynaptic = 10\n\n# Number of postsynaptic neurons\nn_postsynaptic = 1\n\n# Spike rates of presynaptic neurons (Hz)\npresynaptic_rates = np.random.uniform(0.5, 2, size=n_presynaptic)\n\n# Time steps\nt_steps = 1000\n\n# Spike times for presynaptic neurons\npresynaptic_spikes = np.random.exponential(scale=1 / presynaptic_rates, size=(n_presynaptic, t_steps))\n\n# Synaptic weights\nw = np.zeros((n_presynaptic, n_postsynaptic))\n\n# Time window for STDP\ndt = 0.01\n\n# Time\nt = np.arange(0, t_steps * dt, dt)\n\n# STDP parameters\ntau_p = 10\ntau_m = 100\n\n# Initialize weights\nfor i in range(n_presynaptic):\n    w[i, 0] = np.random.uniform(-1, 1)\n\n# Simulate STDP\nfor t_step in range(1, t_steps):\n    for i in range(n_presynaptic):\n        # Calculate synaptic weight\n        w_sum = 0\n        for j in range(n_presynaptic):\n            w_sum += w[j, 0]\n        if presynaptic_spikes[i, t_step-1] > w_sum * t_step:\n            w[i, 0] -= 0.1\n        else:\n            w[i, 0] += 0.1\n\n        # Apply STDP\n        for j in range(n_postsynaptic):\n            if presynaptic_spikes[i, t_step-1] - w_sum * t_step < 0:\n                w[i, j] -= 0.05 * (np.exp(-((presynaptic_spikes[i, t_step-1] - w_sum * t_step) / tau_p)))\n            elif presynaptic_spikes[i, t_step-1] - w_sum * t_step > 0:\n                w[i, j] += 0.05 * (np.exp(-((presynaptic_spikes[i, t_step-1] - w_sum * t_step) / tau_m)))\n\n# Plot synaptic weight changes\nfor i in range(n_postsynaptic):\n    plt.plot(t, w[:, i], label=f'Postsynaptic neuron {i+1}')\n\nplt.xlabel('Time (s)')\nplt.ylabel('Synaptic weight')\nplt.title('Synaptic weight changes')\nplt.legend()\nplt.show()"
+  },
+  {
+    "id": "learning_4",
+    "category": "Learning Rules",
+    "framework": "Norse",
+    "prompt": "Using Norse, set up a spiking network trained with surrogate gradient learning. Perform one forward and backward pass.",
+    "semantic_rules": [
+      "norse.torch",
+      "LIFCell",
+      "loss.backward",
+      "optimizer.step"
+    ],
+    "response": "# Required Libraries\nimport torch\nimport numpy as np\nfrom torch import nn\nfrom torch.optim import SGD\nfrom narse import Norse\n\n# Set seed for reproducibility\ntorch.manual_seed(0)\nnp.random.seed(0)\n\n# Define input and output dimensions\ninput_dim = 784\noutput_dim = 10\nbatch_size = 10\n\n# Define the network\nmodel = Norse(input_dim, output_dim)\n\n# Set the loss function and optimizer\ncriterion = nn.CrossEntropyLoss()\noptimizer = SGD(model.parameters(), lr=0.01)\n\n# Forward pass\n# Input data\nX = np.random.rand(batch_size, input_dim)\ny = np.random.randint(0, output_dim, size=batch_size)\n\n# Convert input data to tensor\nX = torch.tensor(X, dtype=torch.float32)\ny = torch.tensor(y, dtype=torch.long)\n\n# Run a forward pass\noutput = model(X)\n\n# Backward pass\n# Compute the loss\nloss = criterion(output, y)\n\n# Backward pass\n# Zero the gradients\noptimizer.zero_grad()\n\n# Backward pass\nloss.backward()\n\n# Update the weights\noptimizer.step()\n\nprint(\"Output: \", output)\nprint(\"Loss: \", loss.item())"
+  },
+  {
+    "id": "learning_5",
+    "category": "Learning Rules",
+    "framework": "Brian2",
+    "prompt": "Simulate reward-modulated STDP in Brian2 for 5 presynaptic neurons projecting to 1 postsynaptic neuron. Apply reward at 100 ms.",
+    "semantic_rules": [
+      "Synapses",
+      "on_pre",
+      "on_post",
+      "w +=",
+      "100*ms"
+    ],
+    "response": "from brian2 import *\n\n# Set up the parameters\nn_presynaptic_neurons = 5\nn_synapses = 1\ntau_m = 0.02  # synapse time constant\ntau_w = 100 * ms  # reward time constant\ntau_e = 0.05  # postsynaptic neuron time constant\ndt = 0.01 ms\nt = 1000 ms\nthreshold = 0.5  # postsynaptic neuron threshold\n\n# Create the model\neqs_post = Equations('v : 1', 'dv/dt = -v / tau_e')\neqs_post_e = Equations('w : 1', 'dw/dt = (1.0 / tau_w) * (v - w)')\neqs_presynaptic = Equations('v : 1', 'dV/dt = -V / tau_m')\neqs_syn = Equations('w : 1', 'dW/dt = (1.0 / tau_w) * (V - w)')\n\n# Create the neuron\npostsynaptic = NeuronGroup('postsynaptic', eqs=eqs_post, threshold=threshold, synapse=Synapses((n_presynaptic_neurons, n_synapses), (n_synapses,), model=eqs_presynaptic), **{'sync': True})\npresynaptic = NeuronGroup('presynaptic', eqs=eqs_presynaptic, model=eqs_presynaptic, **{'sync': True})\n\n# Create the synapse\nsynapse = Synapses((n_presynaptic_neurons, n_synapses), (n_synapses,), model=eqs_syn, on_pre='w += w', on_post='w -= w')\n\n# Create the reward source\nreward = SpikeSource('reward', method='poisson', rate=10 Hz, start=0, stop=100, dt=dt, monofrequency=True)\n\n# Run the simulation\nwith Record():\n    for t in arange(0, t, dt):\n        # Apply the reward\n        postsynaptic.v = postsynaptic.i[0] * 0.5\n        synapse.w[postsynaptic.i[0]] += 0.5\n        postsynaptic.v = 0\n        presynaptic.v = 0\n        reward.record()\n        reward.check_spikes()\n        postsynaptic.i += 1\n        synapse.w[postsynaptic.i[0]] -= 1\n\n    run(t)"
+  },
+  {
+    "id": "learning_6",
+    "category": "Learning Rules",
+    "framework": "Brian2",
+    "prompt": "Implement triplet STDP in Brian2 with 20 neurons. Monitor average weight evolution.",
+    "semantic_rules": [
+      "Synapses",
+      "on_pre",
+      "on_post",
+      "w +=",
+      "StateMonitor"
+    ],
+    "response": "# Import necessary libraries\nfrom brian2 import *\n\n# Set parameters\nneuron_params = {\n    'C_M': 10.0,  # capacitance (F)\n    'tau_e': 0.05,  # excitatory synaptic time constant (ms)\n    'tau_i': 0.2,  # inhibitory synaptic time constant (ms)\n    'V_th': -55.0,  # threshold (mV)\n    'E_e': 0.0,  # resting potential (mV)\n    'E_i': -80.0,  # resting potential (mV)\n    'I_e': 0.0,  # resting current (nA)\n    'V_reset': -65.0,  # reset potential (mV)\n    'W': 1.0  # synaptic weight (mN)\n}\n\nsynaptic_params = {\n    'C': 0.01,  # synaptic capacitance (F)\n    'tau_e': 5.0,  # excitatory synaptic time constant (ms)\n    'tau_i': 10.0,  # inhibitory synaptic time constant (ms)\n    'E_e': 5.0,  # excitatory synaptic weight (mN)\n    'E_i': -5.0,  # inhibitory synaptic weight (mN)\n    'W': 0.01  # synaptic weight (mN)\n}\n\n# Create a population of 20 neurons\nneurons = NeuronGroup('CIF', 'dV/dt = (I_e + I_syn / C) : 1', **neuron_params)\nneurons.monitor('V', record=True)\n\n# Create a population of 20 synapses\nsynapses = SynapseGroup('CIF', 'dE/dt = (E_e / tau_e + E_i / tau_i) : 1', **synaptic_params)\nsynapses.connect(neurons, neurons)\n\n# Create connections between neurons\nfor i in range(20):\n    for j in range(i+1, 20):\n        synapses.connect(neurons[i], neurons[j])\n\n# Define STDP weights\nsynaptic_weights = np.random.uniform(-1, 1, size=(20, 20))\nsynaptic_weights[i, j] = 0  # let's not change any weights initially\n\n# Monitor average weight evolution\nweights_monitor = StateMonitor(synaptic_weights, dt=0.1, record=True)\n\n# Run the simulation\nrun(5 * 100)  # 5 time points of 100ms each\n\n# Plot the average weight evolution\nprint(weights_monitor.get())\n\n# Print the average weight evolution\nfor i in range(20):\n    print(f'Weight {i}: {np.mean(weights_monitor.get(i))}')"
+  },
+  {
+    "id": "learning_7",
+    "category": "Learning Rules",
+    "framework": "snnTorch",
+    "prompt": "Perform a supervised learning step with snnTorch using surrogate gradient descent on an SNN with 1 hidden layer.",
+    "semantic_rules": [
+      "snn.Leaky",
+      "loss.backward",
+      "optimizer.step"
+    ],
+    "response": "# Import necessary libraries\nimport torch\nimport torch.nn as nn\nimport torch.optim as optim\nimport numpy as np\n\n# Set the seed for reproducibility\ntorch.manual_seed(0)\n\n# Define the number of inputs, hidden units, and outputs\nnum_inputs = 2\nnum_hidden = 10\nnum_outputs = 1\n\n# Initialize the SNN model\nclass SNN(nn.Module):\n    def __init__(self):\n        super(SNN, self).__init__()\n        self.fc1 = nn.Linear(num_inputs, num_hidden)\n        self.fc2 = nn.Linear(num_hidden, num_outputs)\n\n    def forward(self, x):\n        x = torch.relu(self.fc1(x))\n        x = self.fc2(x)\n        return x\n\n# Initialize the model, loss function, and optimizer\nmodel = SNN()\ncriterion = nn.MSELoss()\noptimizer = optim.SGD(model.parameters(), lr=0.01)\n\n# Generate random inputs and corresponding outputs\ninputs = torch.randn(100, num_inputs)\ntargets = torch.randn(100, num_outputs)\n\n# Train the model\nfor epoch in range(1000):\n    # Forward pass\n    outputs = model(inputs)\n    loss = criterion(outputs, targets)\n\n    # Backward pass and optimization\n    optimizer.zero_grad()\n    loss.backward()\n    optimizer.step()\n\n    if (epoch+1) % 100 == 0:\n        print(f'Epoch [{epoch+1}/{1000}], Loss: {loss.item():.4f}')\n\n# Plot the outputs\nplt.plot(outputs.detach().numpy())\nplt.show()"
+  },
+  {
+    "id": "learning_8",
+    "category": "Learning Rules",
+    "framework": "Brian2",
+    "prompt": "Write Brian2 code to implement Hebbian plasticity in a group of 5 neurons.",
+    "semantic_rules": [
+      "Synapses",
+      "on_pre",
+      "w +="
+    ],
+    "response": "import numpy as np\n\nclass Neuron:\n    def __init__(self):\n        # Initialize the weights to zero\n        self.weights = np.zeros((5, 5))\n\n    def calculate_output(self, inputs):\n        # Calculate the weighted sum of the inputs\n        weighted_sum = np.dot(inputs, self.weights)\n        return np.tanh(weighted_sum)\n\nclass Network:\n    def __init__(self):\n        # Initialize the neurons\n        self.neurons = [Neuron() for _ in range(5)]\n\n    def train(self, inputs, targets):\n        # Calculate the predicted outputs\n        predicted_outputs = [neuron.calculate_output(inputs) for neuron in self.neurons]\n\n        # Calculate the errors\n        errors = np.subtract(targets, predicted_outputs)\n\n        # Update the weights using the Hebbian learning rule\n        for i in range(5):\n            for j in range(5):\n                if inputs[j] != 0:\n                    self.neurons[i].weights[j] += errors[i] * inputs[j]\n\n    def test(self, inputs):\n        # Calculate the predicted outputs\n        predicted_outputs = [neuron.calculate_output(inputs) for neuron in self.neurons]\n\n        # Print the predicted outputs\n        for i, output in enumerate(predicted_outputs):\n            print(f\"Output {i}: {output}\")\n\n# Create a network of 5 neurons\nnetwork = Network()\n\n# Define the inputs and targets\ninputs = np.array([[1, 0, 1, 0, 1], [0, 1, 0, 1, 0], [1, 0, 0, 1, 0], [0, 1, 1, 0, 1], [1, 1, 0, 0, 1]])\ntargets = np.array([1, 0, 1, 0, 1])\n\n# Train the network\nfor epoch in range(1000):\n    network.train(inputs, targets)\n\n# Test the network\nnetwork.test(inputs)"
+  },
+  {
+    "id": "learning_9",
+    "category": "Learning Rules",
+    "framework": "Brian2",
+    "prompt": "Simulate Oja's rule for synaptic plasticity in Brian2 for a 2-neuron system.",
+    "semantic_rules": [
+      "Synapses",
+      "StateMonitor",
+      "w +=",
+      "w *="
+    ],
+    "response": "import brian2 as b2\nimport numpy as np\n\n# Set up the 2-neuron system\ng = b2.SpikeGeneratorGroup(neurons=2, rate=1000.0)\n\n# Create the neurons\nneuron1 = b2.Neuron(group=g, model='adaptative', threshold=b2.Threshold(b2.ThresholdType.V, 20.0), \n                membrane_type=b2.AdaptiveRateModel(b2.ADAPTIVE_RATE_MODEL_NAME='eq1'))\nneuron2 = b2.Neuron(group=g, model='adaptative', threshold=b2.Threshold(b2.ThresholdType.V, 20.0), \n                membrane_type=b2.AdaptiveRateModel(b2.ADAPTIVE_RATE_MODEL_NAME='eq1'))\n\n# Define the connectivity between the neurons\nsynapses = b2.Synapses(group=g, connections=((neuron1, neuron2), (neuron2, neuron1)), \n                       transmission_rule=b2.AdaptiveRateSynapse(), synapse_rule=b2.ADCentralizedRule())\n\n# Set up Oja's rule for synaptic plasticity\ndef oja_rule(S, w, V1, V2):\n    delta_p = np.sign(S)*np.dot(w, V1) - np.dot(w, V2)\n    S_new = S + delta_p\n    w_new = w + delta_p / np.linalg.norm(delta_p)\n    return S_new, w_new\n\n# Apply Oja's rule to the synaptic weights\nfor i in range(100):\n    # Generate random input to the neurons\n    V1 = b2.Variable(g, value=np.random.normal(0, 1, size=1))\n    V2 = b2.Variable(g, value=np.random.normal(0, 1, size=1))\n    \n    # Calculate the output of the neurons\n    neuron1 firing_rate, _ = neuron1.time_run(10, V1)\n    neuron2 firing_rate, _ = neuron2.time_run(10, V2)\n    \n    # Get the synaptic weights\n    S = synapses.get_synapse_between(neuron1, neuron2).getsynapses()\n    \n    # Apply Oja's rule\n    S, w = oja_rule(S, synapses.getsynapse_between(neuron1, neuron2).getsynapses(), V1, V2)\n    synapses.setsynapses(S)\n    synapses.setsynapse_between(neuron1, neuron2, w)\n\n# Run the simulation for a short period of time\nneuron1.run(1)\nneuron2.run(1)\n\n# Print the final synaptic weights\nprint(synapses.getsynapses())"
+  },
+  {
+    "id": "learning_10",
+    "category": "Learning Rules",
+    "framework": "Norse",
+    "prompt": "Train a simple Norse LIF network using surrogate gradient learning on dummy input for 1 iteration.",
+    "semantic_rules": [
+      "norse.torch",
+      "LIFCell",
+      "loss.backward",
+      "optimizer.step"
+    ],
+    "response": "import numpy as np\nimport tensorflow as tf\n\n# Set the dimensions\ninput_size = 28\nimage_height = 28\nimage_width = 28\nchannels = 1\nnum_classes = 10\n\n# Create the model\nclass LIFModel(tf.keras.Model):\n    def __init__(self):\n        super(LIFModel, self).__init__()\n        self.conv1 = tf.keras.layers.Conv2D(32, (3, 3), activation='relu')\n        self.conv2 = tf.keras.layers.Conv2D(64, (3, 3), activation='relu')\n        self.fc1 = tf.keras.layers.Flatten()\n        self.fc2 = tf.keras.layers.Dense(128, activation='relu')\n        self.output_layer = tf.keras.layers.Dense(num_classes)\n\n    def call(self, inputs):\n        x = self.conv1(inputs)\n        x = self.conv2(x)\n        x = self.fc1(x)\n        x = self.fc2(x)\n        return self.output_layer(x)\n\n# Create the dummy input\ndummy_input = np.random.rand(1, channels, image_height, image_width)\n\n# Create the model and optimizer\nmodel = LIFModel()\noptimizer = tf.keras.optimizers.Adam()\n\n# Train the model for one iteration\nfor i in range(1):\n    with tf.GradientTape() as tape:\n        predictions = model(dummy_input)\n        loss = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)(tf.cast(tf.argmax(predictions, axis=-1), tf.int32), tf.range(num_classes))\n    gradients = tape.gradient(loss, model.trainable_variables)\n    optimizer.apply_gradients(zip(gradients, model.trainable_variables))"
+  },
+  {
+    "id": "learning_11",
+    "category": "Learning Rules",
+    "framework": "Brian2",
+    "prompt": "Use Brian2 to implement BCM plasticity in a 3-neuron system. Monitor synaptic weights.",
+    "semantic_rules": [
+      "Synapses",
+      "StateMonitor",
+      "w +=",
+      "theta"
+    ],
+    "response": "from brian2 import *\nimport numpy as np\n\n# Define the network\nneuron_eqs = '''\ndv/dt = 0.02*(v + 55 - v**2/5) + 0.8*W[0]*I[0]/C + 0.05*W[1]*I[1]/C + 0.05*W[2]*I[2]/C\ndW/dt = 0.4 * (W[0]*(v + 1) * I[1] - W[0]*(v - 1) * I[0]) / tau_W[0]\ndV/dt = 0\ndI/dt = 0\n'''\n\ngroup_delayed_eqs = '''\ndV/dt = 0\ndI/dt = 0\ndW/dt = 0\n'''\n\n# Define the connections\nsynapses = Synapses(group_delayed_eqs, group_delayed_eqs, 'W : float', 'W : float', method='exact')\nsynapses.connect('I : \"neuron_eqs\"', 'W : \"dW/dt\"')\n\n# Create the neurons\nneurons = Neurons(neuron_eqs, 'v : 1', threshold='v>1')\n\n# Create the monitors\nvar_names = ['W[0]', 'W[1]', 'W[2]']\nmonitors = [Monitor(neurons, var_names)]\n\n# Parameters\nC = 25 * pF\ntau_W = 1 * ms\nI = 20 * nA\nv0 = -65 * mV\n\n# Run the simulation\nrun(100 * ms)\n\n# Plot the results\nplot(monitors)"
+  },
+  {
+    "id": "learning_12",
+    "category": "Learning Rules",
+    "framework": "Brian2",
+    "prompt": "Write Brian2 code for voltage-dependent STDP with excitatory synapses.",
+    "semantic_rules": [
+      "Synapses",
+      "on_pre",
+      "on_post",
+      "w +=",
+      "v_post"
+    ],
+    "response": "import brian2 as b2\n\n# Define the model parameters\neqs = {\n    'V': b2.SDAintegrate(0.02, 0.3, 2, 2, 10),\n    'm': b2.Variable('m', value=0.5, units='one', initial=b2.Variable(0.5, units='one')),\n    'h': b2.Variable('h', value=0.6, units='one', initial=b2.Variable(0.6, units='one')),\n    'C_m': b2.Variable('C_m', value=1.0, units='farads'),  # Capacitance\n    'E_L': b2.Variable('E_L', value=-65.0, units='millivolts'),  # Resting membrane potential\n    'I_ext': b2.Variable('I_ext', value=0.0, units='millivolts'),  # External input\n    'I_Syn': b2.Variable('I_Syn', value=0.0, units='millivolts'),  # Synaptic input\n}\n\ndef integrate(t, V, m, h, C_m, E_L, I_ext, I_Syn):\n    dVdt = (0.032 * (V - E_L)) / C_m + 0.8 * m * (1 - m) * (V - E_L) / C_m + 0.08 * m * h * (V - E_L) / C_m\n    dm_dt = 0.125 * (m - (0.6 * m * (V - E_L) / C_m) - 0.6)\n    dh_dt = 4 * (h - (h / tau_h) * (V - E_L))\n    dI_Syn_dt = 0.01 * I_Syn\n\n    return dVdt, dm_dt, dh_dt, dI_Syn_dt\n\ngroup = b2.Group(n=10)  # Create a group of 10 neurons\nneuron = b2.Neuron(group=group, model=eqs, methods='fixdt', integrate=integrate)\nneuron.I_ext = b2.Variable('I_ext', value=10, units='millivolts', group=group)  # Set external input\nneuron.I_Syn = b2.Variable('I_Syn', value=2, units='millivolts', group=group)  # Set synaptic input\nneuron.start = b2.Variable(10, units='milliseconds')  # Set start time\nneuron.stop = b2.Variable(100, units='milliseconds')  # Set stop time\nneuron.record('V', group=group)  # Record membrane potential\nneuron.record('m', group=group)  # Record excitability\nneuron.record('h', group=group)  # Record recovery factor\nneuron.run()"
+  },
+  {
+    "id": "learning_13",
+    "category": "Learning Rules",
+    "framework": "snnTorch",
+    "prompt": "Build a snnTorch network with 2 layers and train with Adam optimizer on dummy spikes for 1 iteration.",
+    "semantic_rules": [
+      "snn.Leaky",
+      "optimizer.step",
+      "torch.optim.Adam"
+    ],
+    "response": "import torch\nimport torch.nn as nn\nimport torch.optim as optim\n\n# Dummy spikes data\nclass SpikeData:\n    def __init__(self):\n        self.x = torch.randn(10, 2)  # 10 samples, 2 features\n        self.y = torch.randn(10)\n\n    def __len__(self):\n        return len(self.x)\n\n# Define the neural network\nclass Net(nn.Module):\n    def __init__(self):\n        super(Net, self).__init__()\n        self.fc1 = nn.Linear(2, 10)  # 2 inputs, 10 neurons\n        self.fc2 = nn.Linear(10, 1)  # 10 neurons, 1 output\n\n    def forward(self, x):\n        x = torch.relu(self.fc1(x))  # activation function for hidden layer\n        x = self.fc2(x)\n        return x\n\n# Initialize the data and the network\ndata = SpikeData()\nnet = Net()\n\n# Initialize the loss function and the optimizer\ncriterion = nn.MSELoss()\noptimizer = optim.Adam(net.parameters(), lr=0.01)\n\n# Train the network\nfor epoch in range(1):\n    # Forward pass\n    outputs = net(data.x)\n    loss = criterion(outputs, data.y.view(-1, 1))\n\n    # Backward pass and optimization\n    optimizer.zero_grad()\n    loss.backward()\n    optimizer.step()\n\n    print(f'Epoch: {epoch+1}, Loss: {loss.item()}')"
+  },
+  {
+    "id": "learning_14",
+    "category": "Learning Rules",
+    "framework": "Brian2",
+    "prompt": "Simulate spike-timing based learning with inhibitory neurons in Brian2.",
+    "semantic_rules": [
+      "Synapses",
+      "on_pre",
+      "on_post",
+      "w -="
+    ],
+    "response": "import brian2 as b2\n\n# Set up the neuron model\nequations = {\n    'dV/dt': 'dv/dt = (v + 10 * (v - v_threshold) * (1 - v / v_rest)) * (1 - I / (1 + exp((v - v_threshold) / tau_m)))*I / b2.synapses.synweight_i**2',\n    'I': 'I : float'\n}\n\n# Parameters\neqparams = {\n    'v_threshold': -55,\n    'v_rest': -65,\n    'tau_m': 5,\n    'C': 1,\n    'I': 0,\n    'I0': 1,\n    'I_min': -0.05,\n    'I_max': 0.05,\n    'synweight_i': 0.1,\n    'synweight_j': 0.1,\n}\n\n# Create the neurons\nsynapses = b2.SpikeSourcePulseGroup(rate=10, name='synapses')\ns = b2.SpikeSourceGroup(name='spikes', record=['V'])\nneurons = b2.SpikeMonitorGroup(name='spikes', record=['V'])\npost = b2.SpikeSourceGroup(name='posts', rate=10)\np = b2.SpikeMonitorGroup(name='posts', record=['V'])\n\n# Create the networks\ns.connect(s)\npost.connect(p)\n\n# Create the world\nworld = b2.World()\nworld.add_equations(equations, eqparams)\n\n# Simulate\nworld.run(1000)\n\n# Plot\nimport matplotlib.pyplot as plt\n\nplt.plot(neurons.V.get(), label='Input Spike')\nplt.plot(p.V.get(), label='Post Spike')\nplt.xlabel('Time (ms)')\nplt.ylabel('V (mV)')\nplt.legend()\nplt.show()"
+  },
+  {
+    "id": "learning_15",
+    "category": "Learning Rules",
+    "framework": "Norse",
+    "prompt": "Implement one iteration of backpropagation through time (BPTT) with Norse on random data.",
+    "semantic_rules": [
+      "norse.torch",
+      "LIFCell",
+      "loss.backward",
+      "torch.randn"
+    ],
+    "response": "import numpy as np\n\nclass Network:\n    def __init__(self, inputs, outputs, hidden_size, learning_rate):\n        self.inputs = inputs\n        self.outputs = outputs\n        self.hidden_size = hidden_size\n        self.learning_rate = learning_rate\n        self.weights = np.random.rand(inputs.shape[1], hidden_size)\n        self.bias = np.zeros((1, hidden_size))\n\n    def sigmoid(self, x):\n        return 1 / (1 + np.exp(-x))\n\n    def sigmoid_derivative(self, x):\n        return x * (1 - x)\n\n    def forward_pass(self):\n        self.hidden_layer = self.sigmoid(np.dot(self.inputs, self.weights) + self.bias)\n        self.outputs = self.sigmoid(np.dot(self.hidden_layer, self.weights) + self.bias)\n\n    def backpropagation(self):\n        d_outputs = self.outputs * (1 - self.outputs)\n        d_hidden = d_outputs * self.sigmoid_derivative(np.dot(self.inputs, self.weights) + self.bias)\n        self.weights += self.learning_rate * np.dot(self.inputs.T, d_hidden)\n        self.bias += self.learning_rate * np.sum(d_hidden, axis=0, keepdims=True)\n\n    def train(self, inputs, outputs):\n        self.forward_pass()\n        self.backpropagation()\n\n# Generate random data\nnp.random.seed(0)\ninputs = np.random.rand(10, 5)\noutputs = np.random.rand(10, 5)\n\n# Initialize the network\nnetwork = Network(inputs, outputs, hidden_size=10, learning_rate=0.1)\n\n# Train the network\nfor i in range(1000):\n    network.train(inputs, outputs)\n\n# Print the weights\nprint(network.weights)"
+  },
+  {
+    "id": "learning_16",
+    "category": "Learning Rules",
+    "framework": "Brian2",
+    "prompt": "Write Brian2 code to simulate voltage-gated plasticity in a small network.",
+    "semantic_rules": [
+      "NeuronGroup",
+      "Synapses",
+      "w +=",
+      "v >"
+    ],
+    "response": "import brian2 as b2\nimport numpy as np\nimport matplotlib.pyplot as plt\n\n# Create a new neuron group with a small number of neurons\nN = 10\nn_neurons = b2.NeuronGroup('Neuron', model=b2.SpikeSourceExp())\nn_neurons.add_documentation('neuron_doc', 'This is a neuron group')\n\n# Create a set of synapses with voltage-gated synaptic plasticity\nsynapses = b2.SynapseGroup('Synapse', model=b2.Spike Adapt(SpikeSourceExp(), synapse_rule=b2.PSSTD, tau_e=0.1, tau_i=0.1))\nn_synapses = N * N\n\n# Connect the neurons with synapses\nn_synapses.connect(n_neurons, n_neurons, rule='all_to_all')\n\n# Define the parameters for the neuron and synapse models\nneuron_params = {\n    'C_m': 1.0,  # capacitance\n    'E_leak': -70.0,  # resting membrane potential\n    'E_ref': -55.0,  # reversal potential\n    'V_reset': -25.0,  # reset potential\n    'V_thresh': -30.0,  # threshold for firing\n    'I_leak': 1.0  # leak current\n}\n\nsynapse_params = {\n    'tau_e': 0.1,  # synaptic time constant\n    'tau_i': 0.1,  # synaptic time constant\n    'g_e': 1.0  # synaptic conductance\n}\n\n# Initialize the neurons and synapses\nn_neurons.init()\nsynapses.init()\n\n# Run the simulation for 1 second\ndt = 0.01\nt = np.arange(0, 1, dt)\nn_neurons.record('V_m', 's', 'spikes')\nsynapses.record('V_m', 'E', 'I')\n\n# Set the initial conditions\nfor neuron in n_neurons:\n    neuron.V_m = 0.0\nfor synapse in synapses:\n    synapse.E = 0.0\n    synapse.I = 0.0\n\n# Run the simulation\nfor i in t:\n    n_neurons.update(dt)\n    synapses.update(dt)\n    if n_neurons.filter('spikes').first:\n        # record spikes at the end of each simulation interval\n        n_neurons.record('spikes', dt)\n        synapses.record('spikes', dt)\n\n# Plot the results\nfig, (ax1, ax2) = plt.subplots(2, 1, figsize=(8, 6))\n\nax1.plot(n_neurons.filter('V_m').first, 'b', label='Neuron V_m')\nax1.set_title('Neuron V_m')\nax1.set_xlabel('Time (s)')\nax1.set_ylabel('Voltage (mV)')\nax1.legend()\n\nax2.plot(synapses.filter('E').first, 'b', label='Synapse E')\nax2.plot(synapses.filter('I').first, 'g', label='Synapse I')\nax2.set_title('Synapse E and I')\nax2.set_xlabel('Time (s)')\nax2.set_ylabel('Current (nA)')\nax2.legend()\n\nplt.tight_layout()\nplt.show()"
+  },
+  {
+    "id": "learning_17",
+    "category": "Learning Rules",
+    "framework": "snnTorch",
+    "prompt": "Train a 3-layer spiking network in snnTorch with surrogate gradients on dummy MNIST-like input for 1 batch.",
+    "semantic_rules": [
+      "snn.Leaky",
+      "loss.backward",
+      "optimizer.step",
+      "torch.rand"
+    ],
+    "response": "import torch\nimport torch.nn as nn\nimport torch.nn.functional as F\nimport torchvision\nimport torchvision.transforms as transforms\n\n# Define a 3-layer spiking network\nclass SpikingNetwork(nn.Module):\n    def __init__(self):\n        super(SpikingNetwork, self).__init__()\n        self.conv1 = nn.Conv2d(1, 20, kernel_size=5, bias=False)\n        self.conv2 = nn.Conv2d(20, 50, kernel_size=5, bias=False)\n        self.fc1 = nn.Linear(5*5*50, 10)\n\n    def forward(self, x):\n        x = F.leaky_relu(self.conv1(x))\n        x = F.leaky_relu(self.conv2(x))\n        x = x.view(-1, 5*5*50)\n        x = F.leaky_relu(self.fc1(x))\n        return x\n\n# Initialize the network, loss function, and optimizer\nmodel = SpikingNetwork()\ncriterion = nn.MSELoss()\noptimizer = torch.optim.Adam(model.parameters(), lr=0.001)\n\n# Define the dummy MNIST-like input\ntransform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5,), (0.5,))]\ntrain_dataset = torchvision.datasets.FakeMNIST(root='./data', download=True, transform=transform)\ntrain_loader = torch.utils.data.DataLoader(train_dataset, batch_size=1, shuffle=False)\n\n# Train the network\nfor epoch in range(10):\n    for x, y in train_loader:\n        # Set the model to evaluation mode\n        model.eval()\n        \n        # Zero the gradients\n        optimizer.zero_grad()\n        \n        # Forward pass\n        outputs = model(x)\n        \n        # Calculate the loss\n        loss = criterion(outputs, y)\n        \n        # Backward pass\n        loss.backward()\n        \n        # Update the model parameters\n        optimizer.step()\n        \n        # Set the model to training mode\n        model.train()\n\nprint(\"Training completed.\")\n\nimport torch\nimport torch.nn as nn\nimport torch.nn.functional as F\n\n# Define a 3-layer spiking network\nclass SpikingNetwork(nn.Module):\n    def __init__(self):\n        super(SpikingNetwork, self).__init__()\n        self.conv1 = nn.Conv2d(1, 20, kernel_size=5, bias=False)\n        self.conv2 = nn.Conv2d(20, 50, kernel_size=5, bias=False)\n        self.fc1 = nn.Linear(5*5*50, 10)\n\n    def forward(self, x):\n        # Compute the surrogate loss function\n        x = F.leaky_relu(self.conv1(x))\n        x = F.leaky_relu(self.conv2(x))\n        x = x.view(-1, 5*5*50)\n        x = F.leaky_relu(self.fc1(x))\n        # Return the output of the final layer\n        return x\n\n# Initialize the network, loss function, and optimizer\nmodel = SpikingNetwork()\ncriterion = nn.MSELoss()\noptimizer = torch.optim.Adam(model.parameters(), lr=0.001)\n\n# Define the dummy MNIST-like input\ntransform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5,), (0.5,))]\ntrain_dataset = torchvision.datasets.FakeMNIST(root='./data', download=True, transform=transform)\ntrain_loader = torch.utils.data.DataLoader(train_dataset, batch_size=1, shuffle=False)\n\n# Train the network\nfor epoch in range(10):\n    for x, y in train_loader:\n        # Zero the gradients\n        optimizer.zero_grad()\n        \n        # Forward pass\n        outputs = model(x)\n        \n        # Compute the loss\n        loss = criterion(outputs, y)\n        \n        # Backward pass with surrogate gradients\n        loss.backward()\n        \n        # Update the model parameters\n        optimizer.step()\n        \n        # Print the loss\n        print(f'Epoch {epoch+1}, Loss: {loss.item()}')\n\nprint(\"Training completed.\")"
+  },
+  {
+    "id": "learning_18",
+    "category": "Learning Rules",
+    "framework": "Brian2",
+    "prompt": "Write Brian2 code to implement anti-Hebbian plasticity in inhibitory connections.",
+    "semantic_rules": [
+      "Synapses",
+      "on_pre",
+      "w -="
+    ],
+    "response": "import numpy as np\n\nclass InhibitoryNeuron:\n    \"\"\"Represents an inhibitory neuron with anti-Hebbian plasticity.\"\"\"\n    \n    def __init__(self, threshold, tau, alpha, epsilon):\n        \"\"\"\n        Initializes the inhibitory neuron.\n\n        Parameters:\n        - threshold (float): The threshold value for the neuron to fire.\n        - tau (float): The time constant for the exponential decay of inhibitory weights.\n        - alpha (float): The rate of change of inhibitory weights.\n        - epsilon (float): The noise added to the inhibitory weights.\n        \"\"\"\n        self.threshold = threshold\n        self.tau = tau\n        self.alpha = alpha\n        self.epsilon = epsilon\n        self.weights = np.zeros((1, 1))  # initialize weights as zeros\n        self.fire_count = 0  # count of times the neuron fires\n\n    def update_weights(self, pre synaptic_weight):\n        \"\"\"\n        Updates the inhibitory weights based on the anti-Hebbian rule.\n\n        Parameters:\n        - pre_synaptic_weight (float): The weight of the pre-synaptic neuron.\n        \"\"\"\n        # calculate the new weight\n        new_weight = self.weights + self.alpha * (pre_synaptic_weight - self.weights)\n        \n        # add noise to the new weight\n        new_weight += self.epsilon * np.random.normal(0, 1)\n        \n        # limit the weight to the range [-1, 1]\n        new_weight = np.clip(new_weight, -1, 1)\n        \n        # update the weights\n        self.weights = new_weight\n\n    def fire(self):\n        \"\"\"\n        Returns whether the neuron fires based on the threshold value.\n        \n        Returns:\n        - bool: Whether the neuron fires.\n        \"\"\"\n        return np.dot(self.weights, self.weights) > self.threshold\n\n# Example usage:\nif __name__ == \"__main__\":\n    # Create two inhibitory neurons\n    neuron1 = InhibitoryNeuron(threshold=1.5, tau=0.01, alpha=0.01, epsilon=0.05)\n    neuron2 = InhibitoryNeuron(threshold=1.5, tau=0.01, alpha=0.01, epsilon=0.05)\n\n    # Simulate the neurons firing for 100 time steps\n    for _ in range(100):\n        # update the weights of neuron1 based on neuron2's weight\n        neuron1.update_weights(neuron2.weights)\n\n        # check if neuron1 fires\n        if neuron1.fire():\n            neuron1.fire_count += 1\n\n        # update the weights of neuron2 based on neuron1's weight\n        neuron2.update_weights(neuron1.weights)\n\n        # print the firing count of neuron1\n        print(f\"Neuron1 fires: {neuron1.fire_count}\")"
+  },
+  {
+    "id": "learning_19",
+    "category": "Learning Rules",
+    "framework": "Brian2",
+    "prompt": "Implement voltage-based STDP in Brian2 between 2 groups of neurons.",
+    "semantic_rules": [
+      "Synapses",
+      "on_post",
+      "w +=",
+      "v_post"
+    ],
+    "response": "import brian2 as b2\nimport numpy as np\nfrom brian2 import NeuronGroup, SynapseGroup, RegionGroup, Equation, PittsModel\n\n# Create groups\nGroupA = NeuronGroup(100, PittsModel(), method='euler', mem_eqs=['v'], threshold='v>0')\nGroupB = NeuronGroup(100, PittsModel(), method='euler', mem_eqs=['v'], threshold='v>0')\n\n# Create synapses\nsynapses = SynapseGroup((GroupA, GroupB), 'exc', syn_eqs=['w += 0.5*(s * (t + dt) - w)'], reconnect=True)\n\n# Create a region to group the synapses\nregion = RegionGroup(synapses)\n\n# Create a connection between the groups\nconnection = Connection((GroupA, GroupB), synapses)\n\n# Set the initial weights and spike timing-dependent plasticity (STDP) rules\ngroupA_weights = np.random.normal(0, 1, size=100)\ngroupB_weights = np.random.normal(0, 1, size=100)\n\ndef hebbian_stdp(t, group_A, group_B, region):\n    if region.get_connectors()[0].synapse == 'exc':\n        group_A.weights = group_A.weights + 0.1*(group_A.s * (t + dt) - group_A.weights)\n        group_B.weights = group_B.weights - 0.1*(group_B.s * (t + dt) - group_B.weights)\n\ndef anti_hebbian_stdp(t, group_A, group_B, region):\n    if region.get_connectors()[0].synapse == 'exc':\n        group_A.weights = group_A.weights - 0.1*(group_A.s * (t + dt) - group_A.weights)\n        group_B.weights = group_B.weights + 0.1*(group_B.s * (t + dt) - group_B.weights)\n\n# Define the simulation parameters\ndt = 0.01\nt_max = 100\n\n# Create the simulation\nsim = b2.Simulation()\n\n# Set the initial conditions\ngroup_A.v = 0\ngroup_B.v = 0\ngroup_A.weight = group_A_weights\ngroup_B.weight = group_B_weights\n\n# Run the simulation with STDP rules\nsim.run(hebbian_stdp, dt=dt, groups=[group_A, group_B])\nsim.run(anti_hebbian_stdp, dt=dt, groups=[group_A, group_B])\n\n# Plot the results\ngroup_A SpikeTimes = group_A.v == 1\ngroup_B SpikeTimes = group_B.v == 1\n\nimport matplotlib.pyplot as plt\nplt.figure(figsize=(10,5))\nplt.subplot(121)\nplt.hist(group_A.weight, bins=20, alpha=0.5, label='Group A')\nplt.hist(group_B.weight, bins=20, alpha=0.5, label='Group B')\nplt.xlabel('Weight')\nplt.ylabel('Frequency')\nplt.legend()\n\nplt.subplot(122)\nplt.plot(group_A.SpikeTimes, group_A.weight)\nplt.plot(group_B.SpikeTimes, group_B.weight)\nplt.xlabel('Time')\nplt.ylabel('Weight')\nplt.title('Spike-Timing-Dependent Plasticity')\nplt.show()"
+  },
+  {
+    "id": "learning_20",
+    "category": "Learning Rules",
+    "framework": "Norse",
+    "prompt": "Train a Norse recurrent spiking network with surrogate gradients on random time-series data.",
+    "semantic_rules": [
+      "norse.torch",
+      "LIFRecurrentCell",
+      "loss.backward",
+      "torch.randn"
+    ],
+    "response": "import torch\nimport torch.nn as nn\nimport torch.optim as optim\nimport numpy as np\nimport matplotlib.pyplot as plt\n\n# Define the Norse recurrent spiking network\nclass NorseRecurrentSpikingNetwork(nn.Module):\n    def __init__(self, input_dim, output_dim, hidden_dim, num_layers):\n        super(NorseRecurrentSpikingNetwork, self).__init__()\n        self.fc1 = nn.Linear(input_dim, hidden_dim)\n        self.fc2 = nn.Linear(hidden_dim, hidden_dim)\n        self.fc3 = nn.Linear(hidden_dim, hidden_dim)\n        self.fc4 = nn.Linear(hidden_dim, output_dim)\n\n    def forward(self, x):\n        x = torch.relu(self.fc1(x))\n        x = torch.relu(self.fc2(x))\n        x = torch.relu(self.fc3(x))\n        x = torch.sigmoid(self.fc4(x))\n        return x\n\n# Set the hyperparameters\ninput_dim = 10\noutput_dim = 1\nhidden_dim = 20\nnum_layers = 2\nlearning_rate = 0.01\nnum_steps = 1000\nbatch_size = 32\n\n# Generate random time-series data\nnp.random.seed(0)\ntime_steps = 1000\ndata = np.random.rand(time_steps, input_dim)\n\n# Convert data to PyTorch tensor\ndata = torch.from_numpy(data).float()\n\n# Define the loss function and optimizer\ncriterion = nn.MSELoss()\noptimizer = optim.Adam(self.parameters(), lr=learning_rate)\n\n# Initialize the network\nnorse_network = NorseRecurrentSpikingNetwork(input_dim, output_dim, hidden_dim, num_layers)\n\n# Train the network\nfor epoch in range(num_steps):\n    # Forward pass\n    inputs = data.view(-1, input_dim)\n    outputs = norse_network(inputs)\n    loss = criterion(outputs, data.view(-1))\n\n    # Backward pass\n    optimizer.zero_grad()\n    loss.backward()\n    optimizer.step()\n\n    # Print the loss at each 100 steps\n    if (epoch+1) % 100 == 0:\n        print(f'Epoch {epoch+1}, Loss: {loss.item()}')\n\n# Make predictions on the test data\npredictions = norse_network(data.view(-1, input_dim))\n\n# Plot the data and predictions\nplt.plot(data.numpy().T)\nplt.plot(predictions.numpy().T)\nplt.show()\n\n# Train the network with surrogate gradients\nfor epoch in range(num_steps):\n    # Forward pass\n    inputs = data.view(-1, input_dim)\n    outputs = norse_network(inputs)\n    loss = criterion(outputs, data.view(-1))\n\n    # Backward pass with surrogate gradients\n    loss.backward()\n    surrogate_gradients = torch.autograd.grad(loss, list(norse_network.parameters()), retain_graph=True)\n\n    # Update the network's weights using the surrogate gradients\n    optimizer.zero_grad()\n    for param, gradient in zip(norse_network.parameters(), surrogate_gradients):\n        param -= learning_rate * gradient"
+  },
+  {
+    "id": "network_1",
+    "category": "Network Creation",
+    "framework": "Brian2",
+    "prompt": "Construct a Brian2 network with 100 excitatory and 25 inhibitory neurons connected randomly with 10% probability. Run for 500 ms and record population firing rates.",
+    "semantic_rules": [
+      "NeuronGroup",
+      "Synapses",
+      "SpikeMonitor",
+      "run(",
+      "p=0.1",
+      "500*ms"
+    ],
+    "response": "import numpy as np\nfrom brian2 import NeuronGroup, Record, run, MonotoneTarget, Target\n\n# Create a population of 100 excitatory neurons\nexcitatory = NeuronGroup(100, eqs='dv/dt = I', threshold='v>0', model='hythm_perex', group='excitatory')\n\n# Create a population of 25 inhibitory neurons\ninhibitory = NeuronGroup(25, eqs='dv/dt = I', threshold='v>0', model='hythm_perex', group='inhibitory')\n\n# Create connections between excitatory and inhibitory neurons\np = 0.1\nexcitatory.connect('excitatory', inhibitory, 'exc', p=p)\n\n# Create a variable to store the firing rates\nfiring_rates = Record('neuron (Hz)')\n\n# Create a recording scope\nscope = Recording Scope(target=firing_rates, record=excitatory)\n\n# Create a neuron scope\nneuron_scope = MonotoneTarget(target=firing_rates, scope=scope)\n\n# Create a run scope\nrun_scope = Target(target=neuron_scope)\n\n# Define the parameters\ndt = 0.01  # time step (ms)\nt_total = 500  # total simulation time (ms)\nn_steps = int(t_total / dt)\n\n# Set the initial membrane potential\nexcitatory.v = 0\ninhibitory.v = 0\n\n# Run the simulation\nrun(run_scope, dt=dt, t=0, n=n_steps)\n\n# Print the firing rates\nprint(firing_rates)"
+  },
+  {
+    "id": "network_2",
+    "category": "Network Creation",
+    "framework": "snnTorch",
+    "prompt": "Build a spiking CNN in snnTorch with one convolutional LIF layer followed by a fully connected LIF layer. Run random spike input for 50 steps.",
+    "semantic_rules": [
+      "snn.Conv2d",
+      "snn.Leaky",
+      "torch.rand",
+      "nn.Linear"
+    ],
+    "response": "import torch\nimport torch.nn as nn\nimport torch.nn.functional as F\nimport torch.optim as optim\nimport numpy as np\n\n# Define a LIF neuron class\nclass LIF(nn.Module):\n    def __init__(self, input_dim, output_dim):\n        super(LIF, self).__init__()\n        self.w = nn.Parameter(torch.randn(input_dim, output_dim))\n        self.v = nn.Parameter(torch.zeros(output_dim))\n        self.p = nn.Parameter(torch.zeros(output_dim))\n        self.tau = 1.0  # time constant\n\n    def reset(self):\n        self.v.data = torch.zeros_like(self.v)\n        self.p.data = torch.zeros_like(self.p)\n\n    def integrate(self, x):\n        # Integrate the input with a leaky integral\n        self.v += self.tau * (x - self.p)\n\n    def fire(self, x):\n        # Check if the neuron is above threshold\n        self.p.data = torch.max(0, x)\n        return self.p.data > 0\n\n    def forward(self, x):\n        self.reset()\n        self.integrate(x)\n        return self.fire(self.v)\n\n# Define the SNN model\nclass SNN(nn.Module):\n    def __init__(self):\n        super(SNN, self).__init__()\n        self.conv = nn.Conv2d(1, 10, kernel_size=5)\n        self.fc = nn.Linear(10*5*5, 50)\n        self.conv_lif = LIF(1, 10)\n        self.fc_lif = LIF(10, 50)\n\n    def forward(self, x):\n        x = F.relu(self.conv(x))\n        x = x.view(-1, 10*5*5)\n        x = self.fc(x)\n        x = x.view(-1, 10, 5, 5)\n        x = self.conv_lif(x)\n        x = x.view(-1, 50)\n        x = self.fc_lif(x)\n        return x\n\n# Initialize the SNN model and the optimizer\nmodel = SNN()\noptimizer = optim.Adam(model.parameters(), lr=0.001)\n\n# Generate random spike input\ninput_size = 28\ntime_steps = 50\nx = torch.randn(time_steps, 1, input_size, input_size)\n\n# Train the SNN\nfor epoch in range(10):\n    for i in range(time_steps):\n        # Forward pass\n        output = model(x[:, i:i+1, :, :])\n        \n        # Apply spiking thresholding\n        output = torch.where(output > 0.5, 1, 0)\n        \n        # Get the next time step\n        next_x = torch.zeros_like(x)\n        next_x[:, i+1, :, :] = output\n        next_x[:, i+1, :, :] = torch.rand_like(next_x[:, i+1, :, :])\n        \n        # Clip the output to the valid range\n        next_x = torch.clamp(next_x, 0, 1)\n        \n        # Update the input\n        x = next_x\n\n    # Backward pass\n    loss = torch.mean((output != 0).float())\n    loss.backward()\n\n    # Update the parameters\n    optimizer.step()\n\n# Print the final output\nprint(model(x[:, -1, :, :].numpy())"
+  },
+  {
+    "id": "network_3",
+    "category": "Network Creation",
+    "framework": "Brian2",
+    "prompt": "Write Brian2 code to implement a recurrent network of 20 neurons with random connections. Stimulate with Poisson input and plot spike raster.",
+    "semantic_rules": [
+      "NeuronGroup",
+      "PoissonGroup",
+      "Synapses",
+      "SpikeMonitor",
+      "plot"
+    ],
+    "response": "import numpy as np\nimport matplotlib.pyplot as plt\nfrom keras.layers import Dense\nfrom keras.models import Model\nfrom keras.layers import Input\nfrom keras.layers import LSTM\nfrom keras.layers import Dropout\nfrom keras.optimizers import Adam\nfrom simpy import SimPy\nfrom simpy import Environment\nimport random\n\n# Number of neurons in the network\nN_NEURONS = 20\n\n# Number of time points to simulate\nN_TIME_POINTS = 1000\n\n# Poisson input parameters\nRATE = 10\n\n# Random seed for reproducibility\nnp.random.seed(0)\n\n# Create a SimPy environment\nenv = Environment()\n\n# Create the recurrent network model\ninput_layer = Input(shape=(1,))\nx = Dense(64, activation='relu')(input_layer)\nx = Dropout(0.2)(x)\nx = LSTM(64, return_sequences=True)(x)\nx = Dense(64, activation='relu')(x)\nx = Dropout(0.2)(x)\noutput_layer = Dense(N_NEURONS, activation='sigmoid')(x)\n\nmodel = Model(inputs=input_layer, outputs=output_layer)\n\n# Compile the model\nmodel.compile(loss='binary_crossentropy', optimizer=Adam(lr=0.001), metrics=['accuracy'])\n\n# Initialize the model weights\nmodel.set_weights([np.random.rand(64, 1) for _ in range(N_NEURONS + 1)])\n\n# Create the input and output arrays\ninput_array = np.zeros((N_TIME_POINTS, 1))\noutput_array = np.zeros(N_NEURONS)\n\n# Simulate the network for each time point\nfor t in range(N_TIME_POINTS):\n    # Generate Poisson input\n    input_array[t] = np.random.poisson(RATE)\n    \n    # Predict output\n    output = model.predict(input_array[:-1])\n    output = np.argmax(output, axis=1)\n    \n    # Record spikes in the output layer\n    output_array[t] = output\n\n# Plot the spike raster\nplt.figure(figsize=(10, 6))\nplt.plot(output_array)\nplt.xlabel('Time')\nplt.ylabel('Neuron')\nplt.title('Spike Raster')\nplt.show()\n\n# Run the simulation\nfor _ in range(10):\n    # Initialize the network weights\n    model.set_weights([np.random.rand(64, 1) for _ in range(N_NEURONS + 1)])\n\n    # Simulate the network for each time point\n    for t in range(N_TIME_POINTS):\n        # Generate Poisson input\n        input_array[t] = np.random.poisson(RATE)\n        \n        # Predict output\n        output = model.predict(input_array[:-1])\n        output = np.argmax(output, axis=1)\n        \n        # Record spikes in the output layer\n        output_array[t] = output\n\n    # Print the average firing rate of each neuron\n    print(output_array)"
+  },
+  {
+    "id": "network_4",
+    "category": "Network Creation",
+    "framework": "Brian2",
+    "prompt": "Construct a feedforward network of 3 layers (10-20-5) in Brian2 with LIF neurons. Stimulate with Poisson input for 200 ms.",
+    "semantic_rules": [
+      "NeuronGroup",
+      "Synapses",
+      "PoissonGroup",
+      "200*ms"
+    ],
+    "response": "from brian2 import *\n\n# Set up the simulation parameters\ndt = 0.01 ms\nt = 200 ms  # total simulation time\n\n# Define the neuron model\neqs = Equations(\n    dv/dt = (I / (1 + v) - v) / tau,\n    v += dt * alpha * dv,\n)\n\n# Define the connections and synapses\nsynapses = Synapses(SpikeSourceArray(10), SpikeSourceArray(10), 'w: 1e-3 C', \n                   method='antidense',  # use antidense to simulate LIF neurons\n                   pre='w * synapse.E', post='w')\n\n# Create the networks\nG = Network()\ng = Group(SpikeSourceArray(10), name='input')\nx = Group(SpikeSourceArray(10), name='hidden')\ny = Group(SpikeSourceArray(5), name='output')\n\n# Create the connections\ng.to(x, synapses=synapses)\nx.to(y, synapses=synapses)\n\n# Set up the SpikeSource for input and output\nspike_source = SpikeSourceArray(10, name='input', delay=0.1 ms, method='poisson', rate=10 Hz)\nx.input = spike_source\ny.input = spike_source\n\n# Run the simulation\nrun(t)\n\n# Plot the results\nplot(g, x, y, spike_source)"
+  },
+  {
+    "id": "network_5",
+    "category": "Network Creation",
+    "framework": "Norse",
+    "prompt": "Build a spiking RNN in Norse with 20 hidden LIF units. Feed it a random spike sequence and output spikes.",
+    "semantic_rules": [
+      "norse.torch",
+      "LIFRecurrentCell",
+      "torch.randn",
+      "nn.RNN"
+    ],
+    "response": "import torch\nimport torch.nn as nn\nimport numpy as np\nimport matplotlib.pyplot as plt\n\n# Define the device\ndevice = torch.device(\"cuda:0\" if torch.cuda.is_available() else \"cpu\")\n\n# Define the parameters\nsequence_length = 100\nhidden_size = 20\nnum_spikes = 5\n\n# Define the LIF neuron model\nclass LIFNeuron(nn.Module):\n    def __init__(self):\n        super(LIFNeuron, self).__init__()\n        self.voltage = nn.Parameter(torch.zeros(1))\n        self.current = nn.Parameter(torch.zeros(1))\n        self.recovery_time = 0.1\n        self.damping = 0.9\n\n    def forward(self, input_tensor):\n        self.current += input_tensor\n        self.voltage += self.current * self.damping\n        self.current *= self.damping\n        return torch.sign(self.voltage)\n\n# Define the spiking RNN model\nclass SpikingRNN(nn.Module):\n    def __init__(self):\n        super(SpikingRNN, self).__init__()\n        self.lif_neurons = nn.ModuleList([LIFNeuron() for _ in range(hidden_size)])\n\n    def forward(self, input_sequence):\n        hidden_state = torch.zeros_like(input_sequence)\n        for t in range(sequence_length):\n            for neuron in self.lif_neurons:\n                hidden_state += neuron(input_sequence[t])\n            output = hidden_state\n            spikes = torch.where(output > 0, 1, 0)\n            print(f\"Time {t}: {spikes}\")\n        return spikes\n\n# Generate a random spike sequence\nnp.random.seed(0)\nspike_sequence = np.random.choice([-1, 1], size=(sequence_length, num_spikes))\n\n# Convert the spike sequence to PyTorch tensor\nspike_sequence = torch.from_numpy(spike_sequence).unsqueeze(2).float().to(device)\n\n# Create an instance of the spiking RNN model\nmodel = SpikingRNN().to(device)\n\n# Run the spiking RNN on the spike sequence\noutput = model(spike_sequence)\n\n# Plot the output spikes\nplt.imshow(output.squeeze(0).numpy(), cmap='binary', origin='lower')\nplt.title('Output Spikes')\nplt.show()"
+  },
+  {
+    "id": "network_6",
+    "category": "Network Creation",
+    "framework": "Brian2",
+    "prompt": "Simulate a small-world spiking network with 50 neurons in Brian2 using the Watts-Strogatz model. Plot degree distribution and spike raster.",
+    "semantic_rules": [
+      "NeuronGroup",
+      "Synapses",
+      "SpikeMonitor",
+      "plot",
+      "networkx"
+    ],
+    "response": "import brian2 as b2\nimport numpy as np\nimport matplotlib.pyplot as plt\n\n# Define parameters\nN = 50  # number of neurons\nP = 2.0  # clustering coefficient\nK = 10  # average degree\nC = 0.1  # noise term\n\n# Set up the network\nmodel = b2.Model()\nmodel.add_neuron(N, 'excitatory', 'V_m', eqs=['dv/dt = 0.02 * (I - V)/tau_m', \n                                                 'dI/dt = (I - V/tau_I) / tau_I'],\n                 threshold='threshold')\nmodel.add_connection('excitatory', 'excitatory', 'excitatory', \n                    w=1.0, synapse_rule='WTS', clustering_coefficient=P,\n                    average_degree=K, noise=C)\nmodel.add_record('v', 'spike_times', record_every=1e-3)\n\n# Simulate the network\nsim = b2.Simulator(model, t_end=2000, dt=0.01)\nsim.run()\n\n# Extract spike times\nv = sim.get('v')\nspike_times = sim.get('spike_times')\n\n# Plot the degree distribution\ndegrees = [model.connections.n_in(n) for n in model.neurons]\nplt.hist(degrees, bins=np.arange(0, max(degrees)+2, 2), edgecolor='black')\nplt.title('Degree Distribution')\nplt.xlabel('Degree')\nplt.ylabel('Frequency')\nplt.show()\n\n# Plot the spike raster\nplt.hist(spike_times, bins=100, edgecolor='black', alpha=0.5)\nplt.title('Spike Raster')\nplt.xlabel('Time (ms)')\nplt.ylabel('Number of spikes')\nplt.show()"
+  },
+  {
+    "id": "network_7",
+    "category": "Network Creation",
+    "framework": "snnTorch",
+    "prompt": "Design a two-layer fully connected LIF network in snnTorch (input 100, hidden 50, output 10). Perform one forward pass with dummy spikes.",
+    "semantic_rules": [
+      "snn.Leaky",
+      "torch.rand",
+      "nn.Linear"
+    ],
+    "response": "import torch\nimport torch.nn as nn\nimport torch.nn.functional as F\nimport numpy as np\n\nclass LeakyIntegrateAndFire(nn.Module):\n    def __init__(self, input_dim, hidden_dim, output_dim):\n        super(LeakyIntegrateAndFire, self).__init__()\n        self.fc1 = nn.Linear(input_dim, hidden_dim)\n        self.fc2 = nn.Linear(hidden_dim, output_dim)\n\n    def forward(self, x):\n        # Compute the integrate stage\n        z = torch.sigmoid(self.fc1(x))\n        integral = torch.zeros_like(z)\n        for _ in range(10):  # number of time steps for integration\n            integral = self.leaky_integrate(z, integral)\n        \n        # Compute the fire stage\n        u = self.fc2(integral)\n        fire_output = torch.where(u > 0, u, 0)\n\n        return fire_output\n\n    def leaky_integrate(self, z, integral):\n        # leaky integrate and fire\n        leaky_integral = z * (1 - self.leakiness) + integral\n        return leaky_integral + self.leakiness * z\n\n    def leakiness(self):\n        return 0.01  # default leakiness value\n\n# Initialize the model\nmodel = LeakyIntegrateAndFire(100, 50, 10)\n\n# Create dummy input tensor\ninput_tensor = torch.randn(1, 100)\n\n# Perform a forward pass\noutput = model(input_tensor)\n\n# Print the output\nprint(output.shape)"
+  },
+  {
+    "id": "network_8",
+    "category": "Network Creation",
+    "framework": "Brian2",
+    "prompt": "Implement a Brian2 model of a balanced random network with 200 excitatory and 50 inhibitory neurons. Simulate 1 second of activity.",
+    "semantic_rules": [
+      "NeuronGroup",
+      "Synapses",
+      "SpikeMonitor",
+      "1*second"
+    ],
+    "response": "from brian2 import *\n\n# Constants\nN Excitatory Neurons = 200\nN Inhibitory Neurons = 50\ndt = 0.01  # time step in seconds\nT = 1.0  # total simulation time in seconds\n\n# Create the neuron models\nExcitatoryNeuron = Model()\nExcitatoryNeuron + 'I' : NetStim('ExExcitatory', doc='excitatory stimulus')\nExcitatoryNeuron + 'V' : Variable('V', init='1.0', synable=False)\nExcitatoryNeuron + 'U' : Variable('U', init=0.0, synable=False)\nExcitatoryNeuron + 's' : Synapse('excitatory', pre='I', post='V', rule='one_to_one', receptor_type='AMPAR')\n\nInhibitoryNeuron = Model()\nInhibitoryNeuron + 'I' : NetStim('InhInhibitory', doc='inhibitory stimulus')\nInhibitoryNeuron + 'V' : Variable('V', init='1.0', synable=False)\nInhibitoryNeuron + 'U' : Variable('U', init=0.0, synable=False)\nInhibitoryNeuron + 's' : Synapse('inhibitory', pre='I', post='V', rule='one_to_one', receptor_type='GABA_A')\n\n# Create the network\ng = Group(ExcitatoryNeuron)\nh = Group(InhibitoryNeuron)\n\n# Connect the neurons\ng >> h << 'I' : Connection('excitatory', doc='excitatory connections')\nh >> g >> 'I' : Connection('inhibitory', doc='inhibitory connections')\n\n# Run the simulation\nsim = NeuronGroup(N Excitatory Neurons, ExcitatoryNeuron, threshold='V > 1.0', model=ExcitatoryNeuron, name='excitatory')\nsim += Group(N Inhibitory Neurons, InhibitoryNeuron, threshold='V > 1.0', model=InhibitoryNeuron, name='inhibitory')\nsim += Connection(N Excitatory Neurons, N Inhibitory Neurons, 'excitatory', rule='one_to_one', synapse=g['excitatory'])\n\n# Synaptic scaling\nexcitatory_scaling = 1.0\ninhibitory_scaling = 1.0\n\nfor conn in g['excitatory'].connections:\n    conn.size = excitatory_scaling\nfor conn in h['inhibitory'].connections:\n    conn.size = inhibitory_scaling\n\n# Run the simulation\nrun('t : 0 ' + str(int(T/dt)) + ' ms')"
+  },
+  {
+    "id": "network_9",
+    "category": "Network Creation",
+    "framework": "Brian2",
+    "prompt": "Construct a three-layer convolutional SNN in Brian2 for 1D input with 16, 32, and 10 neurons per layer. Drive with Poisson input.",
+    "semantic_rules": [
+      "NeuronGroup",
+      "Synapses",
+      "PoissonGroup"
+    ],
+    "response": "import brian2 as b2\nfrom brian2 import Poisson\n\n# Set up the world\nb2.reset()\nb2.default_clock = b2.TimeStep(0.01)  # Set the time step\n\n# Create the SNN model\nclass SNN(b2.SynapticModule):\n    def construct(self):\n        # Define the layer 1 (16 neurons, 1D input)\n        self.layer1 = b2.PoissonGroup(16, membrane='if')\n        \n        # Define the layer 2 (32 neurons, 1D input)\n        self.layer2 = b2.PoissonGroup(32, membrane='if')\n        self.layer2.input = b2.Dendrites(self.layer1, synapses='excitatory')\n        \n        # Define the layer 3 (10 neurons, 1D input)\n        self.layer3 = b2.PoissonGroup(10, membrane='if')\n        self.layer3.input = b2.Dendrites(self.layer2, synapses='excitatory')\n\n# Create the world and add the model to it\nworld = b2.World()\n\n# Set the parameters\nworld.setup()\nworld.sockets.set_buffer_size(1000000)\n\n# Add the model to the world\nworld.add(SNN())\n\n# Run the world for 1 second\nworld.run(monitor=self.layer3, record_variables=['I', 'V_m'], report='network', t_end=100)\n\n# Display the results\nprint(\"Layer 1: \", self.layer1.I)\nprint(\"Layer 2: \", self.layer2.I)\nprint(\"Layer 3: \", self.layer3.I)"
+  },
+  {
+    "id": "network_10",
+    "category": "Network Creation",
+    "framework": "Norse",
+    "prompt": "Build a simple Norse-based feedforward spiking network with 2 hidden LIF layers. Simulate 50 steps with random input.",
+    "semantic_rules": [
+      "norse.torch",
+      "LIFCell",
+      "nn.Linear",
+      "range(50)"
+    ],
+    "response": "import numpy as np\nimport matplotlib.pyplot as plt\n\n# Set the seed for reproducibility\nnp.random.seed(0)\n\n# Define the number of inputs, hidden neurons, and outputs\nn_inputs = 5\nn_hidden1 = 10\nn_hidden2 = 5\nn_outputs = 2\n\n# Define the learning rate and the threshold values for the neurons\nlearning_rate = 0.01\nthreshold1 = -50\nthreshold2 = -20\n\n# Initialize the weights and biases for the connections between layers\nweights1 = np.random.rand(n_inputs, n_hidden1) * 100 - 50\nweights2 = np.random.rand(n_hidden1, n_hidden2) * 50 - 25\nbias1 = np.zeros((n_hidden1, 1))\nbias2 = np.zeros((n_hidden2, 1))\n\n# Initialize the thresholds for the neurons\nthresholds1 = np.array([-50, -30, -20, -10, -5, -1, 0, 1, 2, 3])\nthresholds2 = np.array([-25, -15, -5, -1, 0, 1, 2, 3, 4, 5])\n\n# Define the simulation parameters\nn_steps = 50\n\n# Initialize the output and input arrays\noutputs = np.zeros((n_steps, n_outputs))\ninputs = np.random.rand(n_steps, n_inputs)\n\n# Simulate the network\nfor step in range(n_steps):\n    # Forward pass\n    hidden1 = np.tanh(np.dot(inputs[step], weights1) + bias1)\n    hidden1 = (hidden1 > threshold1) * hidden1 + (hidden1 <= threshold1) * learning_rate * hidden1\n    hidden2 = np.tanh(np.dot(hidden1, weights2) + bias2)\n    hidden2 = (hidden2 > threshold2) * hidden2 + (hidden2 <= threshold2) * learning_rate * hidden2\n    \n    # Backward pass\n    error1 = (hidden2 - outputs[step])\n    error2 = np.dot(weights2.T, error1)\n    weights2 += learning_rate * np.dot(hidden1.T, error2)\n    bias2 += learning_rate * np.sum(error2, axis=0, keepdims=True)\n    weights1 += learning_rate * np.dot(inputs[step].T, error2)\n    bias1 += learning_rate * np.sum(error2 * inputs[step], axis=0, keepdims=True)\n\n    # Store the output\n    outputs[step] = hidden2\n\n# Plot the outputs\nplt.plot(outputs)\nplt.xlabel('Time')\nplt.ylabel('Output')\nplt.title('Output of the Network')\nplt.show()\n\n# Plot the inputs\nplt.plot(inputs)\nplt.xlabel('Time')\nplt.ylabel('Input')\nplt.title('Input to the Network')\nplt.show()"
+  },
+  {
+    "id": "network_11",
+    "category": "Network Creation",
+    "framework": "Brian2",
+    "prompt": "Create a Brian2 model with 3 neuron populations (excitatory, inhibitory, Poisson input). Connect with different probabilities and simulate activity.",
+    "semantic_rules": [
+      "NeuronGroup",
+      "PoissonGroup",
+      "Synapses",
+      "p="
+    ],
+    "response": "import brian2 as b2\nimport numpy as np\n\n# Create the simulator\nb2.setup()\nb2.current_device('gpu', 'cpu') # You can use 'gpu' or 'cpu'\n\n# Create the neuron groups\nexcitatory_group = b2.NeuronGroup('excitatory', model=b2.SpikeSourceModel(), \n                                synapses=b2.Synapses('excitatory', 'inhibitory', \n                                                    'inhibitory', \n                                                    'w', \n                                                    True), \n                                connection_rule=b2.ProbabilisticWeight('w', \n                                                                 'w', \n                                                                 0.1))\n\ninhibitory_group = b2.NeuronGroup('inhibitory', model=b2.SpikeSourceModel(), \n                                synapses=b2.Synapses('inhibitory', 'poisson', \n                                                    'excitatory', \n                                                    'w', \n                                                    True), \n                                connection_rule=b2.ProbabilisticWeight('w', 'w', 0.1))\n\npoisson_group = b2.Population('poisson', model=b2 PoissonRateModel(rate=5.0), \n                            synapses=b2.Synapses('poisson', 'excitatory', \n                                                    'w', \n                                                    True))\n\n# Define the connections\nb2.connect(excitatory_group, inhibitory_group, 'excitatory', 'excitatory')\nb2.connect(inhibitory_group, poisson_group, 'inhibitory', 'excitatory')\n\n# Run the simulation\nstart_time = b2.getTime()\nend_time = 100.0\n\nexcitatory_population = excitatory_group.all_synapses.size\ninhibitory_population = inhibitory_group.all_synapses.size\npoisson_population = poisson_group.all_synapses.size\n\n# Simulate\nb2.run([excitatory_group, inhibitory_group, poisson_group], \n        dt=0.01, record=[excitatory_group, inhibitory_group, poisson_group], \n        t_end=end_time, t_pre=10)\n\n# Record the spikes\nspikes = b2.get_data([excitatory_group, inhibitory_group, poisson_group], \n                    var='spikes', t_end=end_time)\n\n# Print the results\nprint(\"Excitatory population spike count:\", spikes[0].count)\nprint(\"Inhibitory population spike count:\", spikes[1].count)\nprint(\"Poisson population spike count:\", spikes[2].count)"
+  },
+  {
+    "id": "network_12",
+    "category": "Network Creation",
+    "framework": "snnTorch",
+    "prompt": "Implement a spiking autoencoder with snnTorch using two LIF layers. Run one forward and backward pass on random binary input.",
+    "semantic_rules": [
+      "snn.Leaky",
+      "loss.backward",
+      "nn.Linear"
+    ],
+    "response": "import torch\nimport torch.nn as nn\nimport torch.nn.functional as F\nimport numpy as np\n\n# Define the Leaky Integrate-and-Fire (LIF) layer\nclass LIF(nn.Module):\n    def __init__(self, input_dim, output_dim, tau_e, tau_i, I_ext):\n        super(LIF, self).__init__()\n        self.tau_e = tau_e\n        self.tau_i = tau_i\n        self.I_ext = I_ext\n        self.weights = nn.Parameter(torch.randn(input_dim, output_dim))\n        \n    def forward(self, inputs):\n        # Integrate the input\n        self.integrate = torch.zeros_like(inputs)\n        self.integrate += inputs / self.tau_e\n        self.integrate = F.relu(self.integrate)\n        \n        # Fire the neuron\n        self.fired = torch.zeros_like(self.integrate)\n        self.fired[self.integrate > 1] = 1\n        self.fired[self.integrate < 1] = self.integrate[self.integrate < 1]\n        self.integrate[self.fired == 0] = self.integrate[self.fired == 0] * (1 - self.tau_i / (self.tau_e + self.tau_i))\n        self.integrate[self.fired == 1] = 1\n        \n        # Return the output\n        return self.integrate\n\n# Define the spiking neural network with two LIF layers\nclass SpikingNeuralNetwork(nn.Module):\n    def __init__(self, input_dim, hidden_dim1, hidden_dim2, output_dim, tau_e1, tau_i1, tau_e2, tau_i2, I_ext):\n        super(SpikingNeuralNetwork, self).__init__()\n        self.layer1 = LIF(input_dim, hidden_dim1, tau_e1, tau_i1, I_ext)\n        self.layer2 = LIF(hidden_dim1, hidden_dim2, tau_e2, tau_i2, I_ext)\n        self.weights = nn.Linear(hidden_dim1 + hidden_dim2, output_dim)\n        \n    def forward(self, inputs):\n        # Forward pass\n        self.hidden1 = self.layer1(inputs)\n        self.hidden2 = self.layer2(self.hidden1)\n        self.output = self.weights(torch.cat((self.hidden1, self.hidden2), dim=1))\n        \n        return self.output\n\n# Initialize the network and the input\ninput_dim = 10\nhidden_dim1 = 20\nhidden_dim2 = 10\noutput_dim = 1\ntau_e1 = 100\ntau_i1 = 50\ntau_e2 = 50\ntau_i2 = 100\nI_ext = 10\n\nmodel = SpikingNeuralNetwork(input_dim, hidden_dim1, hidden_dim2, output_dim, tau_e1, tau_i1, tau_e2, tau_i2, I_ext)\n\n# Random binary input\ninput_tensor = torch.randn(1, input_dim).round()\n\n# Run forward pass\noutput = model(input_tensor)\nprint(\"Forward pass output:\", output)\n\n# Run backward pass\n# Note: This is a simple example and does not include any loss calculation or optimization\nclass Loss(nn.Module):\n    def __init__(self):\n        super(Loss, self).__init__()\n        self.mse = nn.MSELoss()\n        \n    def forward(self, output, target):\n        return self.mse(output, target)\n\nloss_fn = Loss()\n\n# For simplicity, let's assume our target output is a single value\ntarget = torch.tensor([0.5])\nloss = loss_fn(output, target)\nprint(\"Loss:\", loss)\n\n# For simplicity, we'll use a small learning rate and no optimization\nlearning_rate = 0.01\noptimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)"
+  },
+  {
+    "id": "network_13",
+    "category": "Network Creation",
+    "framework": "Brian2",
+    "prompt": "Design a feedforward Brian2 network with three populations (input 50, hidden 20, output 10). Connect layers with fixed weights and run 200 ms.",
+    "semantic_rules": [
+      "NeuronGroup",
+      "Synapses",
+      "200*ms"
+    ],
+    "response": "import torch\nimport torch.nn as nn\nimport torch.nn.functional as F\nimport numpy as np\nimport time\n\n# Set the seed for reproducibility\ntorch.manual_seed(0)\n\n# Define the number of input, hidden, and output neurons\ninput_neurons = 50\nhidden_neurons = 20\noutput_neurons = 10\n\n# Initialize the weights\ninput_weights = torch.randn(input_neurons, hidden_neurons)\nhidden_weights = torch.randn(hidden_neurons, output_neurons)\n\n# Set the learning rate to 0.01 and the batch size to 100\nlearning_rate = 0.01\nbatch_size = 100\n\n# Define the activation functions\ndef sigmoid(x):\n    return 1 / (1 + torch.exp(-x))\n\ndef sigmoid_derivative(x):\n    return x * (1 - x)\n\nclass Network(nn.Module):\n    def __init__(self):\n        super(Network, self).__init__()\n        self.fc1 = nn.Linear(input_neurons, hidden_neurons)\n        self.fc2 = nn.Linear(hidden_neurons, output_neurons)\n\n    def forward(self, x):\n        x = F.relu(self.fc1(x))\n        x = self.fc2(x)\n        return x\n\n# Initialize the network\nnetwork = Network()\n\n# Define the input and target\ninput_data = torch.randn(1000, input_neurons)\ntarget = torch.randn(1000, output_neurons)\n\n# Set the device (GPU or CPU)\ndevice = torch.device('cuda' if torch.cuda.is_available() else 'cpu')\n\n# Move the data to the device\ninput_data = input_data.to(device)\ntarget = target.to(device)\n\n# Set the network to evaluation mode\nnetwork.eval()\n\n# Run the network for 200 milliseconds\nstart_time = time.time()\noutput = network(input_data)\nend_time = time.time()\n\nprint(\"Time taken:\", end_time - start_time, \"seconds\")"
+  },
+  {
+    "id": "network_14",
+    "category": "Network Creation",
+    "framework": "Brian2",
+    "prompt": "Write Brian2 code for a randomly connected spiking reservoir of 100 neurons. Drive with input current and record spike trains.",
+    "semantic_rules": [
+      "NeuronGroup",
+      "Synapses",
+      "SpikeMonitor",
+      "TimedArray"
+    ],
+    "response": "import brian2 as b2\nimport numpy as np\nimport matplotlib.pyplot as plt\n\n# Set up the simulator\nb2Device.set_device('cpu')\nnet_con = b2.Network()\n\n# Define the parameters\nn_neurons = 100\ninput_scaling = 0.1\nsynaptic_weight_jitter = 0.1\ntau_s = 20 * ms\ntau_m = 5 * ms\ntau_ref = 5 * ms\nI_in = 0.01 nA\nn_spikes = 500\n\n# Create the neuron group\nneuron_group = b2.Population(n_neurons, b2.ExpSpikeSource(), threshold='spike', refractory='spike')\nnet_con.add(neuron_group)\n\n# Create the connection\nnet_con.add_synapses(\n    synapses=b2.Synapses(neuron_group, neuron_group, \n                        synaptic_weight=b2.FixedSynapticWeight(spike_width=tau_s), \n                        connection_rule=b2.AverageWeightedSum() + b2.Jitter(synaptic_weight=synaptic_weight_jitter),\n                        synaptic_delay=tau_ref,\n                        timing_delay=1 ms)\n)\n\n# Set the input current\ninput_current = b2.Pulse(I_in, duration=n_spikes)\n\n# Run the simulation\ntimescale = 1 ms\ndt = 0.01 ms\nrecord_variables = ['I_in', 'V_m', 'I_ext', 'V_m_overall']\nb2.run(1000 * timescale, record=record_variables, report='progress')\n\n# Record the spike trains\nspike_times = neuron_group.record('spike_times')\nb2.run(1000 * timescale, record=spike_times)\n\n# Get the spike trains\nspike_train = spike_times.get()\n\n# Plot the results\nplt.figure(figsize=(10, 6))\n\nplt.subplot(3, 1, 1)\nplt.plot(spike_train)\nplt.xlabel('time (ms)')\nplt.ylabel('Spike rate (Hz)')\nplt.title('Spiking activity')\n\nplt.subplot(3, 1, 2)\nplt.plot(spike_times.get().T, b2.I_in.get())\nplt.xlabel('time (ms)')\nplt.ylabel('Input current (nA)')\n\nplt.subplot(3, 1, 3)\nplt.plot(spike_times.get().T, b2.V_m.get())\nplt.xlabel('time (ms)')\nplt.ylabel('Membrane potential (mV)')\n\nplt.tight_layout()\nplt.show()"
+  },
+  {
+    "id": "network_15",
+    "category": "Network Creation",
+    "framework": "Norse",
+    "prompt": "Build a Norse recurrent network for temporal classification with 30 hidden neurons. Provide random input and print spikes.",
+    "semantic_rules": [
+      "norse.torch",
+      "LIFRecurrentCell",
+      "torch.randn",
+      "nn.Linear"
+    ],
+    "response": "import torch\nimport torch.nn as nn\nimport torch.optim as optim\nimport numpy as np\nimport matplotlib.pyplot as plt\nimport random\n\n# Set the seed for reproducibility\nnp.random.seed(0)\ntorch.manual_seed(0)\n\n# Define the number of hidden neurons, input length, output classes, and learning rate\nhidden_neurons = 30\ninput_length = 100\nnum_classes = 3\nlearning_rate = 0.01\n\n# Define the input data (you can replace this with your own data)\ninput_data = np.random.rand(100, input_length)\n\n# Define the output data (you can replace this with your own data)\noutput_data = np.random.randint(0, num_classes, (100,))\n\n# Create the model\nclass TemporalClassifier(nn.Module):\n    def __init__(self, input_length, hidden_neurons, num_classes):\n        super(TemporalClassifier, self).__init__()\n        self.rnn = nn.GRU(input_size=1, hidden_size=hidden_neurons, num_layers=1, batch_first=True)\n        self.fc = nn.Linear(hidden_neurons, num_classes)\n\n    def forward(self, x):\n        h0 = torch.zeros(1, x.size(0), self.hidden_size).to(x.device)\n        out, _ = self.rnn(x, h0)\n        out = out[:, -1, :]\n        out = self.fc(out)\n        return out\n\nmodel = TemporalClassifier(input_length, hidden_neurons, num_classes)\n\n# Initialize the loss function and optimizer\ncriterion = nn.CrossEntropyLoss()\noptimizer = optim.Adam(model.parameters(), lr=learning_rate)\n\n# Train the model\nfor epoch in range(100):\n    # Forward pass\n    outputs = model(input_data.float())\n    loss = criterion(outputs, output_data)\n    \n    # Backward pass and optimization\n    optimizer.zero_grad()\n    loss.backward()\n    optimizer.step()\n    \n    # Print the loss every 10 epochs\n    if epoch % 10 == 0:\n        print(f'Epoch {epoch+1}, Loss: {loss.item()}')\n\n# Generate spikes from the trained model\ndef generate_spikes(input_length):\n    # Generate a random input\n    input_data = np.random.rand(1, input_length).float()\n    \n    # Generate the output from the model\n    output = model(input_data)\n    \n    # Convert the output to a spike rate\n    spike_rate = np.max(output.detach().numpy(), axis=1)\n    \n    return spike_rate\n\nspikes = generate_spikes(input_length)\n\n# Plot the spikes\nplt.plot(spike_rate)\nplt.show()"
+  },
+  {
+    "id": "network_16",
+    "category": "Network Creation",
+    "framework": "Brian2",
+    "prompt": "Simulate two connected populations (excitatory and inhibitory) in Brian2 with STDP on excitatory connections. Plot firing rates.",
+    "semantic_rules": [
+      "NeuronGroup",
+      "Synapses",
+      "on_pre",
+      "on_post",
+      "plot"
+    ],
+    "response": "import numpy as np\nfrom brian2 import *\n\n# Parameters\neq_exc = Equations('dV/dt = 0.1*(V + 80*(V - 10) / (1 + np.exp(-(V + 10) / 10)) - (0.05*V + 2)/(1 + np.exp(-V/10)))')\neq_inh = Equations('dV/dt = 0.1*(V + 80*(V - 10) / (1 + np.exp(-(V + 10) / 10)) - 0.1*V)')\n\n# Neuron parameters\nexcitatory_neuron = NeuronGroup('excitatory_neuron', eqs=eq_exc, threshold='1.5*mV', reset='10*mV', method='euler', membrane_time_constant=10*ms)\ninhalt_neuron = NeuronGroup('inhalt_neuron', eqs=eq_inh, threshold='1.5*mV', reset='10*mV', method='euler', membrane_time_constant=10*ms)\n\n# Synapses\nexc_inh_synapse = Synapses(excitatory_neuron, inhalt_neuron, 'w: 1e-3*C')\nexc_inh_synapse.connect(excitatory_neuron, inhalt_neuron, model='exc_inh_synapse')\n\n# STDP parameters\nexc_inh_STDP = STDP('exc_inh_synapse', 'w *= (1 + exp(-(t - tau_plus)*u_plus + tau_minus*(1-u_plus)))')\nexc_inh_STDP.adapt = True\nexc_inh_STDP.min_plus = -10\nexc_inh_STDP.max_plus = 10\nexc_inh_STDP.min_minus = -10\nexc_inh_STDP.max_minus = 10\n\n# Initial conditions\nexc_inh_synapse.w = 1.0 * millisiemens\nexc_inh_synapse.w_bar = 0.0\n\n# Run simulation\nneuron_group = excitatory_neuron + inhalt_neuron\nSimulation(0.01*second, report=20*ms)"
+  },
+  {
+    "id": "network_17",
+    "category": "Network Creation",
+    "framework": "snnTorch",
+    "prompt": "Design a snnTorch spiking MLP with three layers (100-50-10 LIF neurons). Perform one forward pass with dummy data.",
+    "semantic_rules": [
+      "snn.Leaky",
+      "torch.rand",
+      "nn.Linear"
+    ],
+    "response": "import torch\nimport torch.nn as nn\nimport torch.nn.functional as F\n\nclass LeakyIntegrator(nn.Module):\n    def __init__(self, m):\n        super(LeakyIntegrator, self).__init__()\n        self.m = m\n        self.reset()\n\n    def reset(self):\n        self.state = torch.zeros_like(self.m)\n\n    def forward(self, x):\n        self.state += x * (1 - self.m) + self.m * self.state\n        return self.state\n\nclass SpikingMLP(nn.Module):\n    def __init__(self, input_size, hidden_size, output_size, m):\n        super(SpikingMLP, self).__init__()\n        self.fc1 = nn.Linear(input_size, hidden_size)\n        self.lif hidden = LeakyIntegrator(m)\n        self.fc2 = nn.Linear(hidden_size, output_size)\n\n    def forward(self, x):\n        x = F.relu(self.fc1(x))\n        x = self.lif_hidden(x)\n        x = F.relu(self.fc2(x))\n        return x\n\n# Define the model\ninput_size = 784\nhidden_size = 100\noutput_size = 10\nm = 0.01  # Leaky integrator coefficient\n\nmodel = SpikingMLP(input_size, hidden_size, output_size, m)\n\n# Create dummy data\ninput_tensor = torch.randn(1, input_size)\ntarget = torch.randn(1, output_size)\n\n# Perform a forward pass\noutput = model(input_tensor)\nprint(output.shape)"
+  },
+  {
+    "id": "network_18",
+    "category": "Network Creation",
+    "framework": "Brian2",
+    "prompt": "Create a Brian2 model of a ring network with 10 neurons, each connected to its two neighbors. Simulate and plot spikes.",
+    "semantic_rules": [
+      "NeuronGroup",
+      "Synapses",
+      "SpikeMonitor",
+      "plot"
+    ],
+    "response": "import numpy as np\nimport brian2 as b2\n\n# Define the model parameters\nN = 10  # number of neurons\nJ = 0.2  # strength of connection\nC = 1e-12  # coupling strength (F)\ntau_v = 1  # membrane time constant (ms)\ntau_u = 1  # integration time constant (ms)\n\n# Create the model\nb2.model('RingNetwork', \n    eqs = [\n        b2.SpikeSourceRate neurons,\n        b2.SpikeRateEquation(\n            v = b2.VoltEquation(0), \n            u = b2.MemIntEquation(0),\n            dvc = -C * v / tau_v, \n            du = -u / tau_u + J * (b2.neurons('v')[:-1] + b2.neurons('v')[1:] + b2.input('spikes')\n            )\n        ),\n        b2.SpikeGeneratorGroup(\n            target=b2.neurons('v'), \n            rate=C * b2.input('spikes')[:-1] + b2.input('spikes')[1:], \n            max=1\n        )\n    ],\n    default_neuron_type=b2.IF_currExpSpike,\n    default synapse_type=b2.StaticSynapse(J=C)\n)\n\n# Create the network\nmodel = b2.Network(b2.RingNetwork(N=N))\nmodel.setup(num=1)\n\n# Run the simulation for 1000 time units\nmodel.run(1000 * 10)\n\n# Plot the output\nimport matplotlib.pyplot as plt\nplt.figure(figsize=(10, 5))\nfor neuron in model.neurons:\n    plt.plot(neuron.t, neuron.v, label=f\"Neuron {neuron.id}\")\nplt.xlabel(\"Time (ms)\")\nplt.ylabel(\"Membrane Potential (mV)\")\nplt.title(\"Ring Network with 10 Neurons\")\nplt.legend()\nplt.show()"
+  },
+  {
+    "id": "network_19",
+    "category": "Network Creation",
+    "framework": "Brian2",
+    "prompt": "Implement a modular network in Brian2 with two clusters of neurons. Connect with high intra-cluster and low inter-cluster probability.",
+    "semantic_rules": [
+      "NeuronGroup",
+      "Synapses",
+      "p="
+    ],
+    "response": "import numpy as np\nfrom brian2 import NeuronGroup, Synapses, Constant, SpikeSourcePoisson\nimport brian2 as brian\n\n# Define the parameters\npop_size = 10\ncluster1_population = 3\ncluster2_population = 7\n\n# Define the connection parameters\nintra_cluster_conn_prob = 0.8\ninter_cluster_conn_prob = 0.2\n\n# Define the synaptic weights\nintra_cluster_weight = 0.5\ninter_cluster_weight = -1.0\n\n# Create the network\ngroup1 = NeuronGroup('C1', '''\n    eq = eq_eqs\n    I : 1\n''', thesis='deafferentation')\ngroup2 = NeuronGroup('C2', '''\n    eq = eq_eqs\n    I : 1\n''', thesis='deafferentation')\n\n# Define the equations for each neuron group\neq_eqs = '''\n    dV/dt = (I / C) * (1 - V / mV)\n    I : 1\n    m : 1 (afferent)\n    n : 1 (afferent)\n    p : 1 (afferent)\n    u : 1 (afferent)\n    V : 1 (voltage)\n'''.split('\\n')\n\n# Create the connection between the two groups\nsynapses = Synapses(group1, group2, 'C1~C2', {\n    'weight': inter_cluster_weight,\n    'probability': inter_cluster_conn_prob\n})\n\n# Create the intra-cluster connections\nsynapses1 = Synapses(group1, group1, 'C1~C1', {\n    'weight': intra_cluster_weight,\n    'probability': intra_cluster_conn_prob\n})\n\nsynapses2 = Synapses(group2, group2, 'C2~C2', {\n    'weight': intra_cluster_weight,\n    'probability': intra_cluster_conn_prob\n})\n\n# Run the simulation\nMonitors = [group1.v, group2.v]\nnum_sim_steps = 1000\ndt = 0.01\nrun(brian2.Simulation(group1, group2, monitors=Monitors, num_steps=num_sim_steps, dt=dt))"
+  },
+  {
+    "id": "network_20",
+    "category": "Network Creation",
+    "framework": "Norse",
+    "prompt": "Write Norse code to simulate a hierarchical spiking network with two LIF layers of different sizes. Run random input spikes for 40 steps.",
+    "semantic_rules": [
+      "norse.torch",
+      "LIFCell",
+      "torch.randn",
+      "range(40)"
+    ],
+    "response": "import numpy as np\nfrom scipy.integrate import odeint\nimport matplotlib.pyplot as plt\n\n# Define the model of the LIF neuron\ndef lif_model(v, w, E, tau, I0, tau_syn):\n    dvdt = (E - v) / tau + w * (1 - v) / tau_syn\n    return dvdt\n\n# Define the hierarchical network model\ndef hierarchical_lif_model(x, t, E1, tau1, I1, tau_syn1, E2, tau2, I2, tau_syn2):\n    v1 = odeint(lif_model, x[0], t, args=(E1, tau1, I1, tau_syn1))\n    w1 = x[1]\n    v2 = odeint(lif_model, v1, t, args=(E2, tau2, I2, tau_syn2))\n    return np.array([v2[-1], w1])\n\n# Parameters\nE1, tau1, I1, tau_syn1 = 0, 10, -70, 5  # parameters for the first layer\nE2, tau2, I2, tau_syn2 = 10, 30, -55, 10  # parameters for the second layer\nnum_layers = 2\nnum_steps = 40\nnum_neurons1 = 100\nnum_neurons2 = 50\n\n# Random initial conditions\nv0 = np.random.uniform(-80, 80, num_neurons1)\nw0 = np.random.uniform(-1, 1, num_neurons1)\n\n# Time points\nt = np.arange(0, num_steps) / 10\n\n# Simulate the network\nx0 = np.column_stack((v0, w0))\nx = odeint(hierarchical_lif_model, x0, t, args=(E1, tau1, I1, tau_syn1, E2, tau2, I2, tau_syn2))\n\n# Plot the results\nplt.figure(figsize=(10, 6))\nplt.plot(t, x[:, 0], label='layer 1')\nplt.plot(t, x[:, 1], label='layer 2')\nplt.xlabel('Time (ms)')\nplt.ylabel('Neuron membrane potential (mV)')\nplt.title('Hierarchical spiking network simulation')\nplt.legend()\nplt.show()\n\n# Plot the firing rates of the two layers\nplt.figure(figsize=(10, 6))\nplt.plot(t, np.mean(x[:, 0], axis=1), label='layer 1')\nplt.plot(t, np.mean(x[:, 1], axis=1), label='layer 2')\nplt.xlabel('Time (ms)')\nplt.ylabel('Firing rate (Hz)')\nplt.title('Firing rates of the two layers')\nplt.legend()\nplt.show()"
+  },
+  {
+    "id": "opt_2",
+    "category": "Code Optimization / Translation",
+    "framework": "snnTorch",
+    "prompt": "Translate a custom PyTorch LIF neuron into snnTorch LIF module.",
+    "semantic_rules": [
+      "snn.Leaky",
+      "nn.Module",
+      "forward"
+    ],
+    "response": "# snnTorch LIF Module\nimport torch\nimport torch.nn as nn\n\nclass LIF(nn.Module):\n    def __init__(self, membrane_time_constant, threshold, leak_current, integrate_current):\n        super(LIF, self).__init__()\n        self.membrane_time_constant = membrane_time_constant\n        self.threshold = threshold\n        self.leak_current = leak_current\n        self.integrate_current = integrate_current\n\n    def forward(self, inputs, dt, t_step):\n        # Calculate the membrane potential\n        V_m = torch.cumsum(inputs, dim=-1)\n        V_m = torch.where(V_m < self.threshold, V_m, torch.ones_like(V_m))\n\n        # Integrate the membrane potential\n        V_m = V_m / self.membrane_time_constant\n\n        # Apply the integrate current\n        V_m += self.integrate_current * (torch.ones_like(V_m) * dt)\n\n        return V_m\n\n# Initialize the LIF module\nlif_module = LIF(membrane_time_constant=10, threshold=1, leak_current=0.5, integrate_current=0.1)\n\n# Initialize inputs\ninputs = torch.randn(1, 100, 10)  # (batch_size, num_spikes, input_dim)\n\n# Set time step and simulation duration\ndt = 0.01\nt_step = 10  # 10 time steps\nt_max = t_step * 10\n\n# Initialize the simulation state\nV_m = torch.zeros(1, 100, 10)  # Initialize membrane potential\n\n# Simulate the LIF network\nfor t in range(t_max):\n    V_m = lif_module(inputs, dt, t)\n\n    # Update the input for the next time step\n    inputs = V_m\n\n# Get the final output\noutput = V_m"
+  },
+  {
+    "id": "opt_3",
+    "category": "Code Optimization / Translation",
+    "framework": "Brian2",
+    "prompt": "Optimize Brian2 code that repeatedly resets neuron states using explicit loops. Use vectorized reset instead.",
+    "semantic_rules": [
+      "NeuronGroup",
+      "v[:] =",
+      "np."
+    ],
+    "response": "import numpy as np\n\nclass Neuron:\n    def __init__(self, excitability, threshold):\n        self.excitability = excitability\n        self.threshold = threshold\n        self.fired = False\n\n    def update(self, inputs, dt):\n        if self.fired:\n            return self.recover()\n        else:\n            self.fired = True\n\n    def recover(self):\n        self.fired = False\n        return self.excitability\n\nclass Network:\n    def __init__(self, neurons, dt):\n        self.neurons = [Neuron(1.0, 1.0) for _ in range(neurons)]\n        self.dt = dt\n\n    def update(self, inputs):\n        self.neurons = [neuron.update(inputs, self.dt) for neuron in self.neurons]\n\n    def reset(self):\n        self.neurons = [neuron for neuron in self.neurons]\n\nimport numpy as np\n\nclass Neuron:\n    def __init__(self, excitability, threshold):\n        self.excitability = excitability\n        self.threshold = threshold\n        self.fired = False\n\n    def update(self, inputs, dt):\n        if self.fired:\n            self.fired = False\n            return self.excitability\n        else:\n            self.fired = True\n\nclass Network:\n    def __init__(self, neurons, dt):\n        self.neurons = [Neuron(1.0, 1.0) for _ in range(neurons)]\n        self.dt = dt\n\n    def update(self, inputs):\n        self.neurons = [neuron.update(inputs, self.dt) for neuron in self.neurons]\n\n    def reset(self):\n        self.neurons[:] = [neuron for neuron in self.neurons]\n\n# Example usage:\nnetwork = Network(10, 0.01)\nnetwork.update([1.0])\nnetwork.reset()\nprint(network.neurons[0].fired)  # prints False"
+  },
+  {
+    "id": "opt_4",
+    "category": "Code Optimization / Translation",
+    "framework": "Norse",
+    "prompt": "Translate a PyTorch RNN with tanh units into a Norse spiking recurrent network with LIF neurons.",
+    "semantic_rules": [
+      "norse.torch",
+      "LIFRecurrentCell",
+      "nn.RNN"
+    ],
+    "response": "import torch\nimport torch.nn as nn\n\nclass RNN(nn.Module):\n    def __init__(self, input_dim, hidden_dim, output_dim):\n        super(RNN, self).__init__()\n        self.rnn = nn.RNN(input_dim, hidden_dim, batch_first=True)\n        self.fc = nn.Linear(hidden_dim, output_dim)\n\n    def forward(self, x):\n        h0 = torch.zeros(1, x.size(0), self.hidden_dim).to(x.device)\n        out, _ = self.rnn(x, h0)\n        out = self.fc(out[:, -1, :])\n        return out\n\nimport torch\nimport torch.nn as nn\nimport torch.nn.functional as F\nfrom norse import LIF\n\nclass NorseRNN(nn.Module):\n    def __init__(self, input_dim, hidden_dim, output_dim):\n        super(NorseRNN, self).__init__()\n        self.lif Neuron = LIF(input_dim=input_dim, output_dim=hidden_dim)\n        self.lif Neuron2 = LIF(input_dim=hidden_dim, output_dim=output_dim)\n        self.fc = nn.Linear(hidden_dim, output_dim)\n\n    def forward(self, x):\n        # Initialize the hidden state of the LIF neurons\n        h0 = torch.zeros(1, x.size(0), self.hidden_dim).to(x.device)\n\n        # Apply the LIF neuron to the input\n        z = self.lif_neuron(x)\n        h = h0 + z\n\n        # Apply the second LIF neuron to the hidden state\n        h = self.lif_neuron2(h)\n\n        # Apply the linear layer\n        out = self.fc(h)\n        return out\n\n# Define the loss function and optimizer\ncriterion = nn.MSELoss()\noptimizer = torch.optim.Adam(self.parameters(), lr=0.001)\n\n# Train the model\nfor epoch in range(num_epochs):\n    for x, y in train_loader:\n        x, y = x.to(device), y.to(device)\n        optimizer.zero_grad()\n        out = self(x)\n        loss = criterion(out, y)\n        loss.backward()\n        optimizer.step()"
+  },
+  {
+    "id": "opt_5",
+    "category": "Code Optimization / Translation",
+    "framework": "Brian2",
+    "prompt": "Improve memory usage of a Brian2 simulation with 5000 neurons by avoiding unnecessary StateMonitor variables.",
+    "semantic_rules": [
+      "NeuronGroup",
+      "StateMonitor",
+      "record=False"
+    ],
+    "response": "import brian2 as b2\nimport numpy as np\n\n# Set up the simulation parameters\nnum_neurons = 5000\nduration = 100 * b2.ms\ndt = 0.1 * b2.ms\nnum_steps = int(duration / dt)\n\n# Create the neuron population\nsynapses = b2.Population(\n    num_neurons,\n    b2.SpikeSourceRate(\n        rate=100  # Synaptic input rate\n    )\n)\n\n# Create the neuron model\nexcitatory_neuron = b2.Population(\n    num_neurons,\n    b2.IF_condensation(\n        tau_e=10 * b2.ms,  # Exponential decay time constant\n        tau_i=20 * b2.ms  # Intrinsic membrane time constant\n    )\n)\n\n# Create the inhibitory neuron population\ninhibitory_neuron = b2.Population(\n    num_neurons,\n    b2.IF_condensation(\n        tau_e=15 * b2.ms,  # Exponential decay time constant\n        tau_i=30 * b2.ms  # Intrinsic membrane time constant\n    )\n)\n\n# Connect the populations\nsynapses << excitatory_neuron >> inhibitory_neuron\n\n# Define the monitor for spikes (only record spikes, no state)\nexcitatory_spikes = b2.SpikeMonitor(excitatory_neuron)\ninhibitory_spikes = b2.SpikeMonitor(inhibitory_neuron)\n\n# Run the simulation\nrun(b2.integrate(1, dt=dt))\n\n# Print the number of spikes\nprint(\"Excitatory spikes:\", excitatory_spikes.count())\nprint(\"Inhibitory spikes:\", inhibitory_spikes.count())"
+  },
+  {
+    "id": "opt_6",
+    "category": "Code Optimization / Translation",
+    "framework": "snnTorch",
+    "prompt": "Convert a PyTorch ANN with ReLU activations into an equivalent snnTorch LIF-based SNN.",
+    "semantic_rules": [
+      "snn.Leaky",
+      "nn.ReLU",
+      "nn.Linear"
+    ],
+    "response": "import torch\nimport torch.nn as nn\nimport torch.nn.functional as F\nfrom snntorch.models import SNN\n\n# Define a PyTorch model with ReLU activations\nclass ReLUANN(nn.Module):\n    def __init__(self):\n        super(ReLUANN, self).__init__()\n        self.fc1 = nn.Linear(784, 128)  # input layer (28x28 images) -> hidden layer (128 units)\n        self.relu = nn.ReLU()\n\n    def forward(self, x):\n        x = self.relu(self.fc1(x))\n        return x\n\n# Define the corresponding SNN model\nclass SNNRelu(nn.Module):\n    def __init__(self):\n        super(SNNRelu, self).__init__()\n        self.fc1 = nn.Linear(784, 128)  # input layer (28x28 images) -> hidden layer (128 units)\n        self.lif = snnTorch.LIF()\n\n    def forward(self, x):\n        x = self.fc1(x)\n        spike_times, spike_counts, reset_values = self.lif(x)\n        return spike_times, spike_counts, reset_values\n\n# Initialize the models and load the input data\nmodel_ann = ReLUANN()\nmodel_snn = SNNRelu()\ninput_data = torch.randn(1, 784)\n\n# Get the synaptic weights for the SNN model\nsynapses_ann = model_ann.fc1.weight.detach().numpy()\nsynapses_snn = model_snn.fc1.weight.detach().numpy()\n\n# Create a sparse matrix for the synapses\nsynapses = snnTorch.SparseTensor(synapses_snn)\n\n# Initialize the SNN model with the sparse synapses\nmodel_snn.initialize_with_synapses(synapses)\n\n# Convert the activation function of the ANN to an equivalent SNN activation function\ndef relu(x):\n    return torch.clamp(x, min=0)\n\ndef ann_to_snn_activation(x):\n    spike_times, spike_counts, _ = model_snn.lif(x)\n    return spike_times\n\n# Test the SNN model\noutput_ann = model_ann(input_data)\noutput_snn = ann_to_snn_activation(input_data)\n\n# Plot the output of the SNN model\nimport matplotlib.pyplot as plt\nplt.plot(output_snn)\nplt.show()"
+  },
+  {
+    "id": "opt_7",
+    "category": "Code Optimization / Translation",
+    "framework": "Brian2",
+    "prompt": "Optimize STDP implementation in Brian2 by replacing event-driven loops with built-in 'on_pre' and 'on_post' statements.",
+    "semantic_rules": [
+      "Synapses",
+      "on_pre",
+      "on_post",
+      "w +="
+    ],
+    "response": "import brian2 as b\nimport numpy as np\n\n# Create a world with 2 neurons\ng = b.Population(2, b.SpikeSourceRate(r=10))\n\n# Create a synapse between the two neurons\nsynapse = b.Synapses(g, g, w=0.5)\n\n# Create a STDP rule\ndef stdp_rule(pre, post, w, E_rev, tau_minus, tau_plus):\n    \"\"\"STDP rule: \u0394w = \u03b7 * (I_s - I_p) * (exp(-E_rev / tau_minus) - exp(-E / tau_plus))\"\"\"\n    E = pre synapses.E\n    I_s = pre synapses.I_s\n    I_p = post synapses.I_p\n    w += E * I_s - E * I_p\n    return w\n\n# Define the STDP parameters\n\u03b7 = 0.02  # Learning rate\nE_rev = -1.0  # Reversal potential\ntau_minus = 200  # Time constant for minus term\ntau_plus = 100  # Time constant for plus term\n\n# Apply the STDP rule on pre and post neurons\ng synapses.on_pre += stdp_rule\ng synapses.on_post += stdp_rule\n\n# Run the simulation for 1000 time units\nwith b.NSTypeClock(1000):\n    g synapses.connect()\n    g synapses.run()"
+  },
+  {
+    "id": "opt_8",
+    "category": "Code Optimization / Translation",
+    "framework": "Norse",
+    "prompt": "Translate a PyTorch CNN into Norse by replacing linear activations with LIF layers. Use random input for testing.",
+    "semantic_rules": [
+      "norse.torch",
+      "LIFCell",
+      "nn.Conv2d"
+    ],
+    "response": "import torch\nimport torch.nn as nn\nimport torch.nn.functional as F\nimport numpy as np\n\n# Create a random input\ninput_shape = (1, 1, 28, 28)\nx = torch.randn(input_shape)\n\n# Define the CNN model with LIF layers\nclass LIF(nn.Module):\n    def __init__(self):\n        super(LIF, self).__init__()\n        self.conv1 = nn.Conv2d(1, 10, kernel_size=5)\n        self.lif1 = nn.LIF()\n        self.conv2 = nn.Conv2d(10, 20, kernel_size=5)\n        self.lif2 = nn.LIF()\n        self.fc1 = nn.Linear(320, 50)\n        self.lif3 = nn.LIF()\n        self.fc2 = nn.Linear(50, 10)\n\n    def forward(self, x):\n        x = F.max_pool2d(self.conv1(x), 2)\n        x = self.lif1(x)\n        x = F.max_pool2d(self.conv2(x), 2)\n        x = self.lif2(x)\n        x = x.view(-1, 320)\n        x = self.fc1(x)\n        x = self.lif3(x)\n        x = x.view(-1, 10)\n        x = self.fc2(x)\n        return x\n\nmodel = LIF()\n\n# Train the model\ncriterion = nn.CrossEntropyLoss()\noptimizer = torch.optim.SGD(model.parameters(), lr=0.01)\n\n# Define the labels\nlabels = torch.randn(1, 10)\n\n# Train the model for a few iterations\nfor i in range(10):\n    optimizer.zero_grad()\n    outputs = model(x)\n    loss = criterion(outputs, labels)\n    loss.backward()\n    optimizer.step()\n    print(f'Epoch {i+1}, Loss: {loss.item()}')"
+  },
+  {
+    "id": "opt_9",
+    "category": "Code Optimization / Translation",
+    "framework": "Brian2",
+    "prompt": "Rewrite inefficient nested loops for synapse updates into vectorized operations in Brian2.",
+    "semantic_rules": [
+      "Synapses",
+      "w[:] =",
+      "np."
+    ],
+    "response": "import brian2 as b2\nimport numpy as np\n\n# Initialize neurons and synapses\nneurons = b2.PopulationGroup(size=100, synapses=b2.Synapses(\n    neurons, neurons, 'C', 'excitatory',\n    neuron_type=b2.NetStochasticLinear(), synapse_type=b2.ADAptiveSpikeTauSigmaSquared())\n)\n\n# Define weights and pre- and post-synaptic variables\nweights = b2.Variable('weights', shape=(100, 100), value=np.array(0.01))\nweights[:] = 0.01\n\npostsynaptic_variables = b2.Variable('postsynaptic_variables', shape=(100,), value=np.array(0.0))\npostsynaptic_variables[:] = 0.0\n\n# Define a function to update the weights and postsynaptic variables\ndef update_weights_and_variables(t, postsynaptic_variables, weights, neurons, synapses):\n    for i in range(neurons.size):\n        for j in range(neurons.size):\n            if synapses[i, j]. fired:\n                postsynaptic_variables[i] += weights[i, j]\n                weights[i, j] *= (1 + b2.random.poisson(0.1))\n\n# Run the simulation\nsynapses.record('total_activity', 'i,j: I')\nsynapses.record('sum_I', 'i,j: I')\nsynapses.record('sum_weights', 'i,j: W')\nneurons.record('v', 'i')\n\nneurons.target_rate = 100\nneurons.run(0.1)\n\n# Vectorized version of the update function\ndef update_weights_and_variables_vectorized(t, postsynaptic_variables, weights, neurons, synapses):\n    postsynaptic_variables.value[:] = 0\n    weights.value[:] = 1\n    synapses.i += 1\n    synapses.j += 1\n    synapses.fired[:] = synapses.i == synapses.j\n    postsynaptic_variables.value[synapses.fired] += weights.value[synapses.fired]\n    weights.value[synapses.fired] *= (1 + b2.random.poisson(0.1))\n\nimport brian2 as b2\nimport numpy as np\n\n# Initialize neurons and synapses\nneurons = b2.PopulationGroup(size=1000, membrane=b2.ADAptiveSpikeTauSigmaSquared())\nsynapses = b2.Synapses(\n    neurons, neurons, 'excitatory',\n    neuron_type=b2.NetStochasticLinear(), synapse_type=b2.ADAptiveSpikeTauSigmaSquared())\n\n# Define weights and postsynaptic variables\nweights = b2.Variable('weights', shape=(1000, 1000), value=np.array(0.01))\nweights[:] = 0.01\n\npostsynaptic_variables = b2.Variable('postsynaptic_variables', shape=(1000,), value=np.array(0.0))\npostsynaptic_variables[:] = 0.0\n\n# Define a function to update the weights and postsynaptic variables\ndef update_weights_and_variables(t, postsynaptic_variables, weights, neurons, synapses):\n    for i in range(neurons.size):\n        for j in range(neurons.size):\n            if synapses[i, j]. fired:\n                postsynaptic_variables[i] += weights[i, j]\n                weights[i, j] *= (1 + b2.random.poisson(0.1))\n\n# Run the simulation\nsynapses.record('total_activity', 'i,j: I')\nsynapses.record('sum_I', 'i,j: I')\nsynapses.record('sum_weights', 'i,j: W')\nneurons.record('v', 'i')\n\nneurons.target_rate = 100\nneurons.run(0.1)\n\n# Vectorized version of the update function\ndef update_weights_and_variables_vectorized(t, postsynaptic_variables, weights, neurons, synapses):\n    postsynaptic_variables.value[:] = 0\n    weights.value[:] = 1\n    synapses.i += 1\n    synapses.j += 1\n    synapses.fired[:] = synapses.i == synapses.j\n    postsynaptic_variables.value[synapses.fired] += weights.value[synapses.fired]\n    weights.value[synapses.fired] *= (1 + b2.random.poisson(0.1))\n\n# Run the simulation\nsynapses.record('total_activity', 'i,j: I')\nsynapses.record('sum_I', 'i,j: I')\nsynapses.record('sum_weights', 'i,j: W')\nneurons.record('v', 'i')\nneurons.run(0.1)\n\n# Compare the results\nprint(synapses.total_activity.value)\nprint(synapses.sum_I.value)\nprint(synaptic_variables.value)"
+  },
+  {
+    "id": "opt_10",
+    "category": "Code Optimization / Translation",
+    "framework": "snnTorch",
+    "prompt": "Replace manual time-step iteration in PyTorch code with snnTorch Sequential API for spiking layers.",
+    "semantic_rules": [
+      "snn.Sequential",
+      "nn.Sequential"
+    ],
+    "response": "import torch\nimport snnTorch as snt\n\n# Define a spiking neural network\nclass SpikingNeuralNetwork(snt.Sequential):\n    def __init__(self, in_features, hidden_size, output_size):\n        super().__init__()\n        self.fc1 = snt.SpikeReactivationLayer(\n            in_features, hidden_size, spiking=True\n        )\n        self.fc2 = snt.SpikeReactivationLayer(\n            hidden_size, output_size, spiking=True\n        )\n\n    def forward(self, x):\n        # Initialize the input spike vector\n        spike_input = torch.zeros_like(x, dtype=torch.bool)\n        # Set the first column of the input spike vector to 1\n        spike_input[:, 0] = 1\n\n        # Apply the first fully connected layer\n        output = self.fc1(x, spike_input)\n        # Apply the second fully connected layer\n        output = self.fc2(output, spike_input)\n\n        return output\n\n# Create a spiking neural network with 3 input features, 10 hidden units and 5 output units\nmodel = SpikingNeuralNetwork(3, 10, 5)\n\n# Create a random input\ninput_data = torch.randn(1, 3)\n\n# Set the input spike vector\nspike_input = torch.zeros_like(input_data, dtype=torch.bool)\nspike_input[:, 0] = 1\n\n# Forward pass\noutput = model(input_data, spike_input)\n\nimport torch\nimport snnTorch as snt\n\n# Define a spiking neural network\nclass SpikingNeuralNetwork(snt.Sequential):\n    def __init__(self, in_features, hidden_size, output_size):\n        super().__init__()\n        self.fc1 = snt.SpikeReactivationLayer(\n            in_features, hidden_size, spiking=True\n        )\n        self.fc2 = snt.SpikeReactivationLayer(\n            hidden_size, output_size, spiking=True\n        )\n\n    def forward(self, x):\n        # Initialize the input spike vector\n        spike_input = torch.zeros_like(x, dtype=torch.bool)\n        # Set the first column of the input spike vector to 1\n        spike_input[:, 0] = 1\n\n        # Apply the first fully connected layer\n        output = self.fc1(x, spike_input)\n        # Apply the second fully connected layer\n        output = self.fc2(output, spike_input)\n        return output\n\n# Create a spiking neural network with 3 input features, 10 hidden units and 5 output units\nmodel = SpikingNeuralNetwork(3, 10, 5)\n\n# Create a random input\ninput_data = torch.randn(1, 3)\n\n# Forward pass\noutput = model(input_data)\n\nimport torch\nimport snnTorch as snt\n\n# Define a spiking neural network\nclass SpikingNeuralNetwork(snt.Sequential):\n    def __init__(self, in_features, hidden_size, output_size):\n        super().__init__()\n        self.fc1 = snt.SpikeReactivationLayer(\n            in_features, hidden_size, spiking=True\n        )\n        self.fc2 = snt.SpikeReactivationLayer(\n            hidden_size, output_size, spiking=True\n        )\n\n    def forward(self, x):\n        # Set the input spike vector\n        spike_input = torch.zeros_like(x, dtype=torch.bool)\n        spike_input[:, 0] = 1\n\n        # Apply the first fully connected layer\n        output = self.fc1(x, spike_input)\n        # Apply the second fully connected layer\n        output = self.fc2(output, spike_input)\n        return output\n\n# Create a spiking neural network with 3 input features, 10 hidden units and 5 output units\nmodel = SpikingNeuralNetwork(3, 10, 5)\n\n# Create a random input\ninput_data = torch.randn(1, 3)\n\n# Forward pass\noutput = model(input_data)"
+  },
+  {
+    "id": "opt_11",
+    "category": "Code Optimization / Translation",
+    "framework": "Brian2",
+    "prompt": "Reduce computational load in Brian2 by using sparse synaptic matrices for large random networks.",
+    "semantic_rules": [
+      "Synapses",
+      "sparse=True",
+      "scipy.sparse"
+    ],
+    "response": "from brian2 import *\n\n# Create a large random network with 1000 neurons\ng = NeuronsGroup(1000)\n\n# Create a Synapses object with sparse matrix storage\nsynapses = Synapses(g, g, synapse=20 * ms, model='static', synapse_rule='W = w * (1 - W / (1 + exp(-(x - 0.5) / 0.1)))')\n\n# Initialize the weights with random values\nsynapses.I = np.random.normal(0, 1, (g.N, g.N))\n\n# Define the synaptic update rule\nsynapses.update_rule = 'w += dt * (syn * (x * y - 0.5 * w)'\n\n# Create a Synapses object with reduced density\nsynapses = Synapses(g, g, synapse=20 * ms, model='static', synapse_rule='w * (1 - w / (1 + exp(-(x - 0.5) / 0.1))', density=0.01)\n\nfrom brian2.monitoring import Monitor\n\n# Create a Monitor object to monitor memory usage\nmonitor = Monitor(synapses, 't', record=[])\n\nfrom brian2 import *\nfrom brian2.monitoring import Monitor\n\n# Set the number of neurons\nN = 1000\n\n# Create a large random network with 1000 neurons\ng = NeuronsGroup(N, method='euler', model='LIF', threshold='1pA', reset='0pA_dV', membrane='1pA_dV')\n\n# Create a Synapses object with sparse matrix storage and Hebbian update rule\nsynapses = Synapses(g, g, synapse=20 * ms, model='static', synapse_rule='w * (1 - w / (1 + exp(-(x - 0.5) / 0.1)))', density=0.01, update_rule='w += dt * (syn * (x * y - 0.5 * w)')\n\n# Initialize the weights with random values\nsynapses.I = np.random.normal(0, 1, (g.N, g.N))\n\n# Create a Monitor object to monitor memory usage\nmonitor = Monitor(synapses, 't', record=[])"
+  },
+  {
+    "id": "opt_12",
+    "category": "Code Optimization / Translation",
+    "framework": "Norse",
+    "prompt": "Translate a PyTorch autoencoder with sigmoid units into a spiking autoencoder in Norse using LIF neurons.",
+    "semantic_rules": [
+      "norse.torch",
+      "LIFCell",
+      "nn.Sigmoid"
+    ],
+    "response": "import torch\nimport torch.nn as nn\nimport torch.nn.functional as F\nimport numpy as np\nimport matplotlib.pyplot as plt\n\nclass LeakyIntegrator(nn.Module):\n    def __init__(self, vTh, vE):\n        super(LeakyIntegrator, self).__init__()\n        self.vTh = vTh\n        self.vE = vE\n\n    def forward(self, x):\n        x = x + 0.01 * x\n        return x\n\nclass LIFCell(nn.Module):\n    def __init__(self, numInputs, numOutputs):\n        super(LIFCell, self).__init__()\n        self.integrator = LeakyIntegrator(vTh=1.0, vE=0.1)\n        self.out = nn.Linear(numInputs, numOutputs)\n\n    def forward(self, x):\n        z = self.integrator(x)\n        z = F.relu(z)\n        return self.out(z)\n\nclass SNNAutoencoder(nn.Module):\n    def __init__(self, inputDim, hiddenDim, numOutputs):\n        super(SNNAutoencoder, self).__init__()\n        self.encoder = nn.Linear(inputDim, hiddenDim)\n        self.encoderLIF = nn.Sequential(\n            LIFCell(hiddenDim, hiddenDim),\n            LIFCell(hiddenDim, hiddenDim),\n            LIFCell(hiddenDim, hiddenDim)\n        )\n        self.decoder = nn.Linear(hiddenDim, numOutputs)\n        self.decoderLIF = nn.Sequential(\n            LIFCell(numOutputs, numOutputs),\n            LIFCell(numOutputs, numOutputs),\n            LIFCell(numOutputs, numOutputs)\n        )\n\n    def forward(self, x):\n        z = self.encoder(x)\n        z = self.encoderLIF(z)\n        reconstructed_x = self.decoderLIF(z)\n        return reconstructed_x\n\n# Example usage:\nif __name__ == '__main__':\n    inputDim = 784\n    hiddenDim = 256\n    numOutputs = 784\n    numLayers = 3\n\n    model = SNNAutoencoder(inputDim, hiddenDim, numOutputs)\n\n    # Initialize weights randomly\n    for param in model.parameters():\n        param.data.uniform_(-1, 1)\n\n    # Make an example input\n    input_x = torch.randn(1, inputDim)\n\n    # Forward pass\n    output = model(input_x)\n    print(output.shape)\n\n    # Plot the input and output\n    plt.plot(input_x.detach().numpy().flatten(), label='Input')\n    plt.plot(output.detach().numpy().flatten(), label='Output')\n    plt.legend()\n    plt.show()"
+  },
+  {
+    "id": "opt_13",
+    "category": "Code Optimization / Translation",
+    "framework": "Brian2",
+    "prompt": "Optimize code that recalculates identical neuron parameters each time step. Precompute constants outside loop.",
+    "semantic_rules": [
+      "NeuronGroup",
+      "Equations",
+      "constant"
+    ],
+    "response": "import numpy as np\n\nclass Neuron:\n    def __init__(self, learning_rate, activation_function, weights, bias):\n        \"\"\"\n        Initialize a neuron with learning rate, activation function, weights, and bias.\n\n        Args:\n            learning_rate (float): The learning rate for the neuron.\n            activation_function (function): The activation function for the neuron.\n            weights (numpy array): The weights of the neuron.\n            bias (float): The bias of the neuron.\n        \"\"\"\n        self.learning_rate = learning_rate\n        self.activation_function = activation_function\n        self.weights = weights\n        self.bias = bias\n\n    def calculate_output(self, inputs):\n        \"\"\"\n        Calculate the output of the neuron.\n\n        Args:\n            inputs (numpy array): The input to the neuron.\n\n        Returns:\n            float: The output of the neuron.\n        \"\"\"\n        # Precompute the dot product of inputs and weights\n        weighted_sum = np.dot(inputs, self.weights)\n\n        # Add bias\n        output = weighted_sum + self.bias\n\n        # Apply activation function\n        output = self.activation_function(output)\n\n        return output\n\n    def update_weights(self, inputs, target_output):\n        \"\"\"\n        Update the weights of the neuron.\n\n        Args:\n            inputs (numpy array): The input to the neuron.\n            target_output (float): The target output of the neuron.\n        \"\"\"\n        # Precompute the error\n        error = target_output - self.calculate_output(inputs)\n\n        # Calculate the gradients of the weights\n        gradients = np.dot(inputs.T, error)\n\n        # Update weights\n        self.weights += -self.learning_rate * gradients\n\nclass ActivationFunction:\n    @staticmethod\n    def sigmoid(x):\n        return 1 / (1 + np.exp(-x))\n\n# Example usage\nlearning_rate = 0.01\nactivation_function = ActivationFunction()\nweights = np.array([0.5, 0.3])\nbias = 0.2\n\nneuron = Neuron(learning_rate, activation_function.sigmoid, weights, bias)\n\ninputs = np.array([0.1, 0.2])\ntarget_output = 0.8\n\noutput = neuron.calculate_output(inputs)\nprint(f\"Output: {output}\")\n\n# Update weights\nneuron.update_weights(inputs, target_output)"
+  },
+  {
+    "id": "opt_14",
+    "category": "Code Optimization / Translation",
+    "framework": "snnTorch",
+    "prompt": "Convert a PyTorch GRU model into an SNN equivalent using snnTorch LIF recurrent layers.",
+    "semantic_rules": [
+      "snn.RLeaky",
+      "nn.GRU"
+    ],
+    "response": "import torch\nimport torch.nn as nn\nimport torch.nn.functional as F\n\n# Define the GRU model\nclass GRUModel(nn.Module):\n    def __init__(self, input_size, hidden_size, num_layers):\n        super(GRUModel, self).__init__()\n        self.gru = nn.GRU(input_size, hidden_size, num_layers, batch_first=True)\n\n    def forward(self, x):\n        h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(x.device)\n        out, _ = self.gru(x, h0)\n        return out\n\n# Define the LIF model\nclass LIFModel(nn.Module):\n    def __init__(self, input_size, hidden_size):\n        super(LIFModel, self).__init__()\n        self.lif = nn.Linear(input_size, hidden_size)\n        self.reset_term = nn.Parameter(torch.zeros(hidden_size))\n        self.recovery_threshold = nn.Parameter(torch.zeros(hidden_size))\n\n    def forward(self, x):\n        output = F.relu(self.lif(x))\n        reset_mask = torch.where(output < self.recovery_threshold, torch.zeros_like(output), torch.ones_like(output))\n        reset_term = torch.sum(reset_mask, dim=1, keepdim=True)\n        return output, reset_term\n\n# Convert the GRU model to LIF model\nclass LIFGRUConvert(nn.Module):\n    def __init__(self, input_size, hidden_size, num_layers):\n        super(LIFGRUConvert, self).__init__()\n        self.lif_gru = LIFModel(input_size, hidden_size)\n        self.gru = GRUModel(input_size, hidden_size, num_layers)\n\n    def forward(self, x):\n        lif_out, lif_reset = self.lif_gru(x)\n        gru_out, _ = self.gru(x)\n        return lif_out, lif_reset\n\n# Test the LIFGRUConvert model\ninput_size = 10\nhidden_size = 20\nnum_layers = 1\nx = torch.randn(1, 10, input_size)\nmodel = LIFGRUConvert(input_size, hidden_size, num_layers)\nlif_out, lif_reset = model(x)\nprint(lif_out.shape)\nprint(lif_reset.shape)"
+  },
+  {
+    "id": "opt_15",
+    "category": "Code Optimization / Translation",
+    "framework": "Brian2",
+    "prompt": "Refactor Brian2 network creation code to avoid creating and deleting neuron groups repeatedly. Reuse defined groups.",
+    "semantic_rules": [
+      "NeuronGroup",
+      "Synapses",
+      "clear()"
+    ],
+    "response": "import numpy as np\nfrom tensorflow import keras\nfrom tensorflow.keras import layers\n\nclass LayerGroup(keras.Layer):\n    def __init__(self, units, kernel_size, strides, padding='same', activation=None, use_bias=False):\n        super(LayerGroup, self).__init__()\n        self.kernel = layers.Conv2D(\n            units=units,\n            kernel_size=kernel_size,\n            strides=strides,\n            padding=padding,\n            use_bias=use_bias,\n            kernel_initializer='glorot_uniform',\n            bias_initializer='zeros'\n        )\n        self.batch_normalization = layers.BatchNormalization()\n        self.activation = layers.Activation(activation)\n        self.dropout = layers.Dropout(0.2)\n\n    def call(self, inputs, training=None):\n        x = self.kernel(inputs)\n        x = self.batch_normalization(x, training=training)\n        x = self.activation(x)\n        x = self.dropout(x, training=training)\n        return x\n\nclass Brian2:\n    def __init__(self, input_shape, output_shape, beta=0.02, learning_rate=0.01):\n        super().__init__()\n        self.input_shape = input_shape\n        self.output_shape = output_shape\n        self.beta = beta\n        self.learning_rate = learning_rate\n        self.x = keras.Input(shape=self.input_shape)\n        self.layers = self._create_layers()\n        self.y = self.layers[-1]\n\n    def _create_layers(self):\n        groups = 4\n        # input layer\n        self.input_layer = layers.Conv2D(\n            units=64,\n            kernel_size=5,\n            strides=2,\n            padding='same',\n            activation=None,\n            use_bias=False\n        )(self.x)\n        # convolutional layers with layer groups\n        for i in range(groups):\n            if i == 0:\n                layer = LayerGroup(\n                    units=256,\n                    kernel_size=3,\n                    strides=1,\n                    padding='same',\n                    activation=None,\n                    use_bias=False\n                )\n            else:\n                layer = LayerGroup(\n                    units=256,\n                    kernel_size=3,\n                    strides=1,\n                    padding='same',\n                    activation=None,\n                    use_bias=False\n                )\n            layer = layer(self.input_layer)\n            self.add_layer(layer)\n            self.input_layer = layer.output\n\n        # dense layers\n        for i in range(groups):\n            if i == 0:\n                layer = layers.BatchNormalization()(self.input_layer)\n            else:\n                layer = layers.BatchNormalization()(self.input_layer)\n            layer = layers.Dense(\n                units=128,\n                activation=None,\n                use_bias=False\n            )(layer)\n            layer = layers.L2Regularizer(0.01)(layer)\n            self.add_layer(layer)\n            self.input_layer = layer\n\n        # output layer\n        self.output_layer = layers.Dense(\n            units=self.output_shape[-1],\n            activation=None,\n            use_bias=False\n        )(self.input_layer)\n\n    def add_layer(self, layer):\n        self.layers.append(layer)\n\n    def compile(self):\n        self.optimizer = keras.optimizers.SGD(\n            lr=self.learning_rate,\n            momentum=0\n        )\n        self.loss_fn = keras.losses.SparseCategoricalCrossentropy(from_logits=True)\n        self.metrics = ['accuracy']\n\n    def train(self, inputs, labels):\n        with tf.GradientTape() as tape:\n            predictions = self.layers[-1].output\n            loss = self.loss_fn(labels, predictions)\n        gradients = tape.gradient(loss, self.layers)\n        self.optimizer.apply_gradients(zip(gradients, self.layers))\n        return loss, predictions"
+  },
+  {
+    "id": "opt_16",
+    "category": "Code Optimization / Translation",
+    "framework": "Norse",
+    "prompt": "Translate a PyTorch MLP classifier into a spiking network in Norse with surrogate gradient training.",
+    "semantic_rules": [
+      "norse.torch",
+      "LIFCell",
+      "nn.Linear",
+      "loss.backward"
+    ],
+    "response": "import torch\nimport torch.nn as nn\nimport torch.optim as optim\n\nclass MLP(nn.Module):\n    def __init__(self, input_dim, hidden_dim, output_dim):\n        super(MLP, self).__init__()\n        self.fc1 = nn.Linear(input_dim, hidden_dim)\n        self.relu = nn.ReLU()\n        self.fc2 = nn.Linear(hidden_dim, output_dim)\n\n    def forward(self, x):\n        x = self.relu(self.fc1(x))\n        x = self.fc2(x)\n        return x\n\nimport Norse\n\nclass SpikingNN(Norse.SpikingNetwork):\n    def __init__(self, input_dim, hidden_dim, output_dim):\n        super(SpikingNN, self).__init__()\n        self.fc1 = Norse.Linear(input_dim, hidden_dim)\n        self.relu = Norse.ReLU()\n        self.fc2 = Norse.Linear(hidden_dim, output_dim)\n\n    def forward(self, x):\n        x = self.relu(self.fc1(x))\n        x = self.fc2(x)\n        return x\n\nclass SurrogateGradientTraining:\n    def __init__(self, model, loss_fn, optimizer):\n        self.model = model\n        self.loss_fn = loss_fn\n        self.optimizer = optimizer\n\n    def train(self, inputs, labels):\n        # Forward pass\n        outputs = self.model(inputs)\n        loss = self.loss_fn(outputs, labels)\n\n        # Backward pass\n        gradients = self.optimizer.zero_grad()\n        loss.backward()\n        gradients.backward()\n\n        # Update model weights\n        self.optimizer.step()\n\n# Initialize MLP\nmlp = MLP(input_dim=784, hidden_dim=256, output_dim=10)\n\n# Initialize Norse Spiking Neural Network\nspiking_nn = SpikingNN(input_dim=784, hidden_dim=256, output_dim=10)\n\n# Initialize Surrogate Gradient Training\nloss_fn = nn.CrossEntropyLoss()\noptimizer = optim.Adam(lr=0.001)\nsurrogate_gradient_training = SurrogateGradientTraining(spiking_nn, loss_fn, optimizer)\n\n# Train the model\nfor epoch in range(10):\n    inputs, labels = # Load your dataset here\n    surrogate_gradient_training.train(inputs, labels)"
+  },
+  {
+    "id": "opt_17",
+    "category": "Code Optimization / Translation",
+    "framework": "Brian2",
+    "prompt": "Use Brian2 'run_regularly' to replace explicit Python loops that update neuron states every time step.",
+    "semantic_rules": [
+      "run_regularly",
+      "NeuronGroup"
+    ],
+    "response": "import numpy as np\n\nclass Neuron:\n    def __init__(self, input_coefficients, threshold, spiking_rate):\n        \"\"\"\n        Initialize a neuron.\n\n        Args:\n            input_coefficients (list): A list of input coefficients.\n            threshold (float): The threshold value for the neuron.\n            spiking_rate (float): The spiking rate of the neuron.\n        \"\"\"\n        self.input_coefficients = input_coefficients\n        self.threshold = threshold\n        self.spiking_rate = spiking_rate\n        self.state = 0.0\n\n    def update(self, input_values):\n        \"\"\"\n        Update the neuron state based on the input values.\n\n        Args:\n            input_values (list): A list of input values.\n        \"\"\"\n        self.state = np.dot(input_values, self.input_coefficients) + self.state\n\n    def fire(self):\n        \"\"\"\n        Check if the neuron is about to fire.\n\n        Returns:\n            bool: True if the neuron is about to fire, False otherwise.\n        \"\"\"\n        return self.state >= self.threshold\n\n\nclass NeuralNetwork:\n    def __init__(self, neurons):\n        \"\"\"\n        Initialize a neural network.\n\n        Args:\n            neurons (list): A list of Neuron objects.\n        \"\"\"\n        self.neurons = neurons\n\n    def run_regularly(self, time_step, input_values):\n        \"\"\"\n        Run the neural network regularly.\n\n        Args:\n            time_step (int): The time step.\n            input_values (list): A list of input values.\n        \"\"\"\n        for neuron in self.neurons:\n            neuron.update(input_values)\n            if neuron.fire():\n                print(f\"Neuron {neuron.name} has fired!\")\n\n# Define neurons and create a neural network\nneuron1 = Neuron([0.5, 0.5], 1.0, 0.5)\nneuron2 = Neuron([0.3, 0.7], 2.0, 0.3)\nneuron3 = Neuron([0.2, 0.8], 3.0, 0.2)\n\nneural_network = NeuralNetwork([neuron1, neuron2, neuron3])\n\n# Run the neural network\ntime_step = 10\ninput_values = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]\nfor i in range(time_step):\n    neural_network.run_regularly(i, input_values)\n\nimport numpy as np\n\nclass LeakyIntegrator:\n    def __init__(self, threshold, beta):\n        \"\"\"\n        Initialize a Leaky Integrator.\n\n        Args:\n            threshold (float): The threshold value for the neuron.\n            beta (float): The slope of the leaky integrator.\n        \"\"\"\n        self.threshold = threshold\n        self.beta = beta\n        self.state = 0.0\n\n    def update(self, input_values):\n        \"\"\"\n        Update the Leaky Integrator state.\n\n        Args:\n            input_values (list): A list of input values.\n        \"\"\"\n        self.state = (1 - self.beta) * self.state + np.dot(input_values, [1, 1]) + self.beta\n\n    def fire(self):\n        \"\"\"\n        Check if the Leaky Integrator is about to fire.\n\n        Returns:\n            bool: True if the Leaky Integrator is about to fire, False otherwise.\n        \"\"\"\n        return self.state >= self.threshold\n\n\nclass Neuron:\n    def __init__(self, leaky_integrator, input_coefficients):\n        \"\"\"\n        Initialize a neuron.\n\n        Args:\n            leaky_integrator (LeakyIntegrator): The Leaky Integrator for the neuron.\n            input_coefficients (list): A list of input coefficients.\n        \"\"\"\n        self.leaky_integrator = leaky_integrator\n        self.input_coefficients = input_coefficients\n\n    def run_regularly(self, time_step, input_values):\n        \"\"\"\n        Run the neuron regularly.\n\n        Args:\n            time_step (int): The time step.\n            input_values (list): A list of input values.\n        \"\"\"\n        self.leaky_integrator.update(input_values)\n        if self.leaky_integrator.fire():\n            print(f\"Neuron has fired!\")\n\n# Define a Leaky Integrator and create neurons\nleaky_integrator = LeakyIntegrator(1.0, 0.1)\nneuron1 = Neuron(leaky_integrator, [0.5, 0.5])\nneuron2 = Neuron(leaky_integrator, [0.3, 0.7])\nneuron3 = Neuron(leaky_integrator, [0.2, 0.8])\n\n# Run the neurons\ntime_step = 10\ninput_values = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]\nfor i in range(time_step):\n    neuron1.run_regularly(i, input_values)\n    neuron2.run_regularly(i, input_values)\n    neuron3.run_regularly(i, input_values)"
+  },
+  {
+    "id": "opt_18",
+    "category": "Code Optimization / Translation",
+    "framework": "snnTorch",
+    "prompt": "Optimize snnTorch code by using batched spike inputs instead of processing each sample sequentially.",
+    "semantic_rules": [
+      "torch.rand",
+      "batch_size,"
+    ],
+    "response": "import torch\nimport torch.nn as nn\nimport numpy as np\n\nclass SNN(nn.Module):\n    def __init__(self, num_inputs, num_units, num_outputs):\n        super(SNN, self).__init__()\n        self.fc1 = nn.Linear(num_inputs, num_units)\n        self.fc2 = nn.Linear(num_units, num_outputs)\n\n    def forward(self, inputs):\n        # Initialize the spike inputs\n        spike_inputs = torch.zeros(inputs.shape[0], num_inputs)\n        \n        # Create a mask for non-zero spike inputs\n        mask = (inputs > 0).float()\n        \n        # Apply the mask to the inputs\n        masked_inputs = mask * inputs\n        \n        # Apply batch normalization\n        normalized_inputs = nn.functional.normalize(masked_inputs, p=2, dim=1)\n        \n        # Apply ReLU activation\n        activated_inputs = torch.relu(normalized_inputs)\n        \n        # Apply batched spike inputs\n        spike_output = self.fc1(activated_inputs)\n        \n        # Apply the second linear transformation\n        output = self.fc2(spike_output)\n        \n        return output\n\n# Initialize the model, inputs, and optimizer\nmodel = SNN(num_inputs=100, num_units=20, num_outputs=10)\ninputs = torch.randn(100, 100)  # Generate random inputs\noptimizer = torch.optim.Adam(model.parameters(), lr=0.01)\n\n# Train the model\nfor epoch in range(10):\n    # Zero the gradients\n    optimizer.zero_grad()\n    \n    # Forward pass\n    outputs = model(inputs)\n    \n    # Calculate the loss\n    loss = torch.mean(outputs)\n    \n    # Backward pass\n    loss.backward()\n    \n    # Update the model parameters\n    optimizer.step()\n    \n    print(f'Epoch {epoch+1}, Loss: {loss.item()}')\n\nimport torch\nimport torch.nn as nn\nimport numpy as np\n\nclass SNN(nn.Module):\n    def __init__(self, num_inputs, num_units, num_outputs):\n        super(SNN, self).__init__()\n        self.fc1 = nn.Linear(num_inputs, num_units)\n        self.fc2 = nn.Linear(num_units, num_outputs)\n\n    def forward(self, inputs):\n        # Create a mask for non-zero spike inputs\n        mask = (inputs > 0).float()\n        \n        # Apply the mask to the inputs\n        masked_inputs = mask * inputs\n        \n        # Apply batch normalization\n        normalized_inputs = nn.functional.normalize(masked_inputs, p=2, dim=1)\n        \n        # Apply ReLU activation\n        activated_inputs = torch.relu(normalized_inputs)\n        \n        # Apply batched spike inputs\n        spike_output = self.fc1(activated_inputs)\n        \n        # Apply the second linear transformation\n        output = self.fc2(spike_output)\n        \n        return output\n\n# Initialize the model, inputs, and optimizer\nmodel = SNN(num_inputs=100, num_units=20, num_outputs=10)\ninputs = torch.randn(100, 100)  # Generate random inputs\noptimizer = torch.optim.Adam(model.parameters(), lr=0.01)\n\n# Train the model\nfor epoch in range(10):\n    # Zero the gradients\n    optimizer.zero_grad()\n    \n    # Forward pass\n    outputs = model(inputs)\n    \n    # Calculate the loss\n    loss = torch.mean(outputs)\n    \n    # Backward pass\n    loss.backward()\n    \n    # Update the model parameters\n    optimizer.step()\n    \n    print(f'Epoch {epoch+1}, Loss: {loss.item()}')\n\nimport torch\nimport torch.nn as nn\nimport torch.nn.parallel\nimport torch.distributed as dist\n\nclass SNN(nn.Module):\n    def __init__(self, num_inputs, num_units, num_outputs):\n        super(SNN, self).__init__()\n        self.fc1 = nn.Linear(num_inputs, num_units)\n        self.fc2 = nn.Linear(num_units, num_outputs)\n\n    def forward(self, inputs):\n        # Apply batch normalization\n        normalized_inputs = nn.functional.normalize(inputs, p=2, dim=1)\n        \n        # Apply ReLU activation\n        activated_inputs = torch.relu(normalized_inputs)\n        \n        # Apply batched spike inputs\n        spike_output = self.fc1(activated_inputs)\n        \n        # Apply the second linear transformation\n        output = self.fc2(spike_output)\n        \n        return output\n\n# Initialize the model, inputs, and optimizer\nmodel = SNN(num_inputs=100, num_units=20, num_outputs=10)\n\n# Create a data parallel model\ndevice = torch.device(\"cuda\" if torch.cuda.is_available() else \"cpu\")\nmodel = nn.DataParallel(model)\n\n# Train the model\nfor epoch in range(10):\n    # Zero the gradients\n    optimizer.zero_grad()\n    \n    # Forward pass\n    outputs = model(inputs)\n    \n    # Calculate the loss\n    loss = torch.mean(outputs)\n    \n    # Backward pass\n    loss.backward()\n    \n    # Update the model parameters\n    optimizer.step()\n    \n    print(f'Epoch {epoch+1}, Loss: {loss.item()}')\n\nimport torch\nimport torch.nn as nn\nimport torch.utils.data as data\n\nclass SNN(nn.Module):\n    def __init__(self, num_inputs, num_units, num_outputs):\n        super(SNN, self).__init__()\n        self.fc1 = nn.Linear(num_inputs, num_units)\n        self.fc2 = nn.Linear(num_units, num_outputs)\n\n    def forward(self, inputs):\n        # Apply batch normalization\n        normalized_inputs = nn.functional.normalize(inputs, p=2, dim=1)\n        \n        # Apply ReLU activation\n        activated_inputs = torch.relu(normalized_inputs)\n        \n        # Apply batched spike inputs\n        spike_output = self.fc1(activated_inputs)\n        \n        # Apply the second linear transformation\n        output = self.fc2(spike_output)\n        \n        return output\n\n# Initialize the model, inputs, and optimizer\nmodel = SNN(num_inputs=100, num_units=20, num_outputs=10)\ndataloader = data.DataLoader(inputs, batch_size=32)\n\n# Train the model\nfor epoch in range(10):\n    # Zero the gradients\n    optimizer.zero_grad()\n    \n    # Forward pass\n    with torch.no_grad():\n        for batch in dataloader:\n            outputs = model(batch)\n    \n    # Calculate the loss\n    loss = torch.mean(outputs)\n    \n    # Backward pass\n    loss.backward()\n    \n    # Update the model parameters\n    optimizer.step()\n    \n    print(f'Epoch {epoch+1}, Loss: {loss.item()}')"
+  },
+  {
+    "id": "opt_19",
+    "category": "Code Optimization / Translation",
+    "framework": "Brian2",
+    "prompt": "Replace inefficient Python-based spike logging with Brian2 built-in SpikeMonitor.",
+    "semantic_rules": [
+      "SpikeMonitor",
+      "spikes"
+    ],
+    "response": "import numpy as np\nfrom brian2 import *\n\n# Define the model\neqs = Equation(spike = Spikes(0.5, 2.5), v = Equation(Neurone(v0=-65, I=0), dvt = Equation(dt=0.01, dvdt = -0.3*v))\n\n# Create a group of neurons\nG = Group(Neurone(N=100))\n\n# SpikeMonitor\nsm = SpikeMonitor(G, record=[G.neurons], dt=0.01)\n\n# Integrate the simulation\nrun(1000)\n\n# Print the spikes\nfor neuron in G.neurons:\n    print(f'Neuron {neuron} spiked {len(neuron.spikes)} times')\n\n# Plot the spikes\nsm.plot()"
+  },
+  {
+    "id": "opt_20",
+    "category": "Code Optimization / Translation",
+    "framework": "Norse",
+    "prompt": "Translate a TensorFlow LIF implementation into Norse. Provide random inputs to test correctness.",
+    "semantic_rules": [
+      "norse.torch",
+      "LIFCell",
+      "torch.randn"
+    ],
+    "response": "import tensorflow as tf\n\nclass LSTMCell(tf.nn.rnn_cell.RNNCell):\n    def __init__(self, num_units):\n        self.units = num_units\n        self.w_ih = tf.Variable(tf.random_normal([num_units, num_units]))\n        self.w_hh = tf.Variable(tf.random_normal([num_units, num_units]))\n        self.w_x = tf.Variable(tf.random_normal([num_units, num_units]))\n        self.b = tf.Variable(tf.random_normal([num_units]))\n        self.w_cell = tf.Variable(tf.random_normal([num_units, num_units]))\n        self.w_oh = tf.Variable(tf.random_normal([num_units, num_units]))\n        self.u1 = tf.Variable(tf.random_normal([num_units, num_units]))\n        self.u2 = tf.Variable(tf.random_normal([num_units, num_units]))\n        self.v = tf.Variable(tf.random_normal([num_units]))\n\n    def call(self, x, h, c):\n        gates = tf.tanh(tf.matmul(x, self.w_ih) + tf.matmul(h, self.w_hh) + self.w_x)\n        c_new = tf.matmul(gates, self.w_cell) + self.b\n        h_new = tf.matmul(gates, self.w_oh) + tf.tanh(c_new)\n        return h_new, c_new\n\n# Create a new LSTM cell with 128 units\nlstm_cell = LSTMCell(128)\n\n# Create a dummy input tensor\nx = tf.random.normal([1, 10, 128])\n\n# Create dummy initial state\nh = tf.zeros((1, 128))\nc = tf.zeros((1, 128))\n\n# Run the LSTM\nfor i in range(10):\n    h, c = lstm_cell(x[:, i, :], h, c)"
+  }
+]

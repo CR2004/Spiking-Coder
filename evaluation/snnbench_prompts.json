@@ -1,0 +1,555 @@
+[
+  {
+    "id": "neuron_1",
+    "category": "Neuron & Synapse Models",
+    "framework": "Brian2",
+    "prompt": "Write Brian2 code to simulate a single LIF neuron receiving constant input current of 2 nA for 100 ms. Record and plot the membrane potential and spike times.",
+    "semantic_rules": ["NeuronGroup", "StateMonitor", "SpikeMonitor", "run(", "100*ms", "2*nA", "plot"]
+  },
+  {
+    "id": "neuron_2",
+    "category": "Neuron & Synapse Models",
+    "framework": "snnTorch",
+    "prompt": "Using snnTorch, create a LIF neuron layer that receives random input of size [32, 100] for 50 time steps. Record spike outputs.",
+    "semantic_rules": ["snn.Leaky", "torch.rand", "spk_rec", "range(50)"]
+  },
+  {
+    "id": "neuron_3",
+    "category": "Neuron & Synapse Models",
+    "framework": "Brian2",
+    "prompt": "Simulate two LIF neurons connected by a synapse with weight 0.5 nS. Drive the first neuron with a current pulse and record both membrane potentials.",
+    "semantic_rules": ["NeuronGroup", "Synapses", "StateMonitor", "run(", "0.5*nS", "TimedArray"]
+  },
+  {
+    "id": "neuron_4",
+    "category": "Neuron & Synapse Models",
+    "framework": "Norse",
+    "prompt": "Implement a single LIF layer in Norse. Feed it random spikes (batch 16, 20 time steps, 10 features) and print spike outputs.",
+    "semantic_rules": ["norse.torch", "LIFCell", "torch.randn", "(16, 20, 10)"]
+  },
+  {
+    "id": "neuron_5",
+    "category": "Neuron & Synapse Models",
+    "framework": "Brian2",
+    "prompt": "Simulate a Hodgkin-Huxley neuron in Brian2 with sinusoidal current input for 200 ms. Plot voltage trace and mark spikes.",
+    "semantic_rules": ["NeuronGroup", "StateMonitor", "SpikeMonitor", "sin(2*pi", "plot"]
+  },
+  {
+    "id": "neuron_6",
+    "category": "Neuron & Synapse Models",
+    "framework": "Brian2",
+    "prompt": "Simulate a group of 5 Poisson neurons driving a single LIF neuron in Brian2 for 300 ms. Plot spike raster.",
+    "semantic_rules": ["PoissonGroup", "NeuronGroup", "SpikeMonitor", "300*ms", "plot"]
+  },
+  {
+    "id": "neuron_7",
+    "category": "Neuron & Synapse Models",
+    "framework": "snnTorch",
+    "prompt": "Build an snnTorch model with two stacked LIF layers. Pass random binary input spikes and plot spike count per neuron.",
+    "semantic_rules": ["snn.Leaky", "torch.rand", "spk_rec", "plt.bar"]
+  },
+  {
+    "id": "neuron_8",
+    "category": "Neuron & Synapse Models",
+    "framework": "Brian2",
+    "prompt": "Create a Brian2 simulation of an Izhikevich neuron receiving step input current. Plot the firing pattern.",
+    "semantic_rules": ["NeuronGroup", "StateMonitor", "TimedArray", "plot"]
+  },
+  {
+    "id": "neuron_9",
+    "category": "Neuron & Synapse Models",
+    "framework": "Brian2",
+    "prompt": "Write Brian2 code for 10 LIF neurons connected in a chain (1?2?3...). Apply input to the first neuron and plot spike propagation.",
+    "semantic_rules": ["NeuronGroup", "Synapses", "SpikeMonitor", "i==j-1", "plot"]
+  },
+  {
+    "id": "neuron_10",
+    "category": "Neuron & Synapse Models",
+    "framework": "Norse",
+    "prompt": "Create a Norse-based LIF neuron that integrates inputs over 50 steps. Provide random torch input and return voltage states.",
+    "semantic_rules": ["norse.torch", "LIFCell", "torch.randn", "range(50)", "state.v"]
+  },
+  {
+    "id": "neuron_11",
+    "category": "Neuron & Synapse Models",
+    "framework": "Brian2",
+    "prompt": "Model an adaptive exponential integrate-and-fire neuron in Brian2 with step input current. Plot membrane voltage over 200 ms.",
+    "semantic_rules": ["NeuronGroup", "StateMonitor", "exp(", "200*ms", "plot"]
+  },
+  {
+    "id": "neuron_12",
+    "category": "Neuron & Synapse Models",
+    "framework": "Brian2",
+    "prompt": "Simulate a pair of inhibitory and excitatory neurons connected in Brian2. Apply Poisson input and plot spikes.",
+    "semantic_rules": ["NeuronGroup", "Synapses", "PoissonGroup", "SpikeMonitor", "plot"]
+  },
+  {
+    "id": "neuron_13",
+    "category": "Neuron & Synapse Models",
+    "framework": "snnTorch",
+    "prompt": "Construct a LIF neuron layer in snnTorch with time constant 20 ms. Feed random input and plot spiking activity.",
+    "semantic_rules": ["snn.Leaky", "beta=", "torch.rand", "plt.plot"]
+  },
+  {
+    "id": "neuron_14",
+    "category": "Neuron & Synapse Models",
+    "framework": "Brian2",
+    "prompt": "Implement a conductance-based LIF neuron model in Brian2. Drive it with current pulses and record voltage.",
+    "semantic_rules": ["NeuronGroup", "StateMonitor", "ge", "gi", "TimedArray"]
+  },
+  {
+    "id": "neuron_15",
+    "category": "Neuron & Synapse Models",
+    "framework": "Norse",
+    "prompt": "Create a Norse spiking feedforward model with two LIF layers, 10 hidden units each. Run 30 time steps.",
+    "semantic_rules": ["norse.torch", "LIFCell", "nn.Linear", "range(30)"]
+  },
+  {
+    "id": "neuron_16",
+    "category": "Neuron & Synapse Models",
+    "framework": "Brian2",
+    "prompt": "Write Brian2 code to simulate a group of 50 neurons, half excitatory, half inhibitory. Connect with 10% probability.",
+    "semantic_rules": ["NeuronGroup", "Synapses", "SpikeMonitor", "p=0.1", "25"]
+  },
+  {
+    "id": "neuron_17",
+    "category": "Neuron & Synapse Models",
+    "framework": "Brian2",
+    "prompt": "Write Brian2 code to simulate a current-based synapse model connecting 3 neurons. Record post-synaptic potentials.",
+    "semantic_rules": ["NeuronGroup", "Synapses", "StateMonitor", "on_pre"]
+  },
+  {
+    "id": "neuron_18",
+    "category": "Neuron & Synapse Models",
+    "framework": "snnTorch",
+    "prompt": "Implement a simple autoencoder-like SNN with one input LIF layer and one output LIF layer in snnTorch. Train for one iteration.",
+    "semantic_rules": ["snn.Leaky", "loss.backward", "optimizer.step", "nn.Linear"]
+  },
+  {
+    "id": "neuron_19",
+    "category": "Neuron & Synapse Models",
+    "framework": "Brian2",
+    "prompt": "Build a Brian2 model with a neuron receiving Poisson spike input. Plot spike train and voltage response.",
+    "semantic_rules": ["NeuronGroup", "PoissonGroup", "SpikeMonitor", "StateMonitor", "plot"]
+  },
+  {
+    "id": "neuron_20",
+    "category": "Neuron & Synapse Models",
+    "framework": "Norse",
+    "prompt": "Create a Norse model with 5 LIF neurons, random torch input, and run 50 steps. Output spikes per neuron.",
+    "semantic_rules": ["norse.torch", "LIFCell", "torch.randn", "range(50)"]
+  },
+  {
+    "id": "learning_1",
+    "category": "Learning Rules",
+    "framework": "Brian2",
+    "prompt": "Implement STDP on a single synapse between two LIF neurons in Brian2. Run 200 ms and plot weight change.",
+    "semantic_rules": ["Synapses", "on_pre", "on_post", "w +=", "200*ms", "plot"]
+  },
+  {
+    "id": "learning_2",
+    "category": "Learning Rules",
+    "framework": "snnTorch",
+    "prompt": "Train a two-layer LIF network in snnTorch using surrogate gradient descent. Perform one training step on random data.",
+    "semantic_rules": ["snn.Leaky", "loss.backward", "optimizer.step", "torch.rand"]
+  },
+  {
+    "id": "learning_3",
+    "category": "Learning Rules",
+    "framework": "Brian2",
+    "prompt": "Write Brian2 code for pair-based STDP between 10 presynaptic and 1 postsynaptic neuron. Plot synaptic weight changes.",
+    "semantic_rules": ["Synapses", "on_pre", "on_post", "w +=", "plot"]
+  },
+  {
+    "id": "learning_4",
+    "category": "Learning Rules",
+    "framework": "Norse",
+    "prompt": "Using Norse, set up a spiking network trained with surrogate gradient learning. Perform one forward and backward pass.",
+    "semantic_rules": ["norse.torch", "LIFCell", "loss.backward", "optimizer.step"]
+  },
+  {
+    "id": "learning_5",
+    "category": "Learning Rules",
+    "framework": "Brian2",
+    "prompt": "Simulate reward-modulated STDP in Brian2 for 5 presynaptic neurons projecting to 1 postsynaptic neuron. Apply reward at 100 ms.",
+    "semantic_rules": ["Synapses", "on_pre", "on_post", "w +=", "100*ms"]
+  },
+  {
+    "id": "learning_6",
+    "category": "Learning Rules",
+    "framework": "Brian2",
+    "prompt": "Implement triplet STDP in Brian2 with 20 neurons. Monitor average weight evolution.",
+    "semantic_rules": ["Synapses", "on_pre", "on_post", "w +=", "StateMonitor"]
+  },
+  {
+    "id": "learning_7",
+    "category": "Learning Rules",
+    "framework": "snnTorch",
+    "prompt": "Perform a supervised learning step with snnTorch using surrogate gradient descent on an SNN with 1 hidden layer.",
+    "semantic_rules": ["snn.Leaky", "loss.backward", "optimizer.step"]
+  },
+  {
+    "id": "learning_8",
+    "category": "Learning Rules",
+    "framework": "Brian2",
+    "prompt": "Write Brian2 code to implement Hebbian plasticity in a group of 5 neurons.",
+    "semantic_rules": ["Synapses", "on_pre", "w +="]
+  },
+  {
+    "id": "learning_9",
+    "category": "Learning Rules",
+    "framework": "Brian2",
+    "prompt": "Simulate Oja's rule for synaptic plasticity in Brian2 for a 2-neuron system.",
+    "semantic_rules": ["Synapses", "StateMonitor", "w +=", "w *="]
+  },
+  {
+    "id": "learning_10",
+    "category": "Learning Rules",
+    "framework": "Norse",
+    "prompt": "Train a simple Norse LIF network using surrogate gradient learning on dummy input for 1 iteration.",
+    "semantic_rules": ["norse.torch", "LIFCell", "loss.backward", "optimizer.step"]
+  },
+  {
+    "id": "learning_11",
+    "category": "Learning Rules",
+    "framework": "Brian2",
+    "prompt": "Use Brian2 to implement BCM plasticity in a 3-neuron system. Monitor synaptic weights.",
+    "semantic_rules": ["Synapses", "StateMonitor", "w +=", "theta"]
+  },
+  {
+    "id": "learning_12",
+    "category": "Learning Rules",
+    "framework": "Brian2",
+    "prompt": "Write Brian2 code for voltage-dependent STDP with excitatory synapses.",
+    "semantic_rules": ["Synapses", "on_pre", "on_post", "w +=", "v_post"]
+  },
+  {
+    "id": "learning_13",
+    "category": "Learning Rules",
+    "framework": "snnTorch",
+    "prompt": "Build a snnTorch network with 2 layers and train with Adam optimizer on dummy spikes for 1 iteration.",
+    "semantic_rules": ["snn.Leaky", "optimizer.step", "torch.optim.Adam"]
+  },
+  {
+    "id": "learning_14",
+    "category": "Learning Rules",
+    "framework": "Brian2",
+    "prompt": "Simulate spike-timing based learning with inhibitory neurons in Brian2.",
+    "semantic_rules": ["Synapses", "on_pre", "on_post", "w -="]
+  },
+  {
+    "id": "learning_15",
+    "category": "Learning Rules",
+    "framework": "Norse",
+    "prompt": "Implement one iteration of backpropagation through time (BPTT) with Norse on random data.",
+    "semantic_rules": ["norse.torch", "LIFCell", "loss.backward", "torch.randn"]
+  },
+  {
+    "id": "learning_16",
+    "category": "Learning Rules",
+    "framework": "Brian2",
+    "prompt": "Write Brian2 code to simulate voltage-gated plasticity in a small network.",
+    "semantic_rules": ["NeuronGroup", "Synapses", "w +=", "v >"]
+  },
+  {
+    "id": "learning_17",
+    "category": "Learning Rules",
+    "framework": "snnTorch",
+    "prompt": "Train a 3-layer spiking network in snnTorch with surrogate gradients on dummy MNIST-like input for 1 batch.",
+    "semantic_rules": ["snn.Leaky", "loss.backward", "optimizer.step", "torch.rand"]
+  },
+  {
+    "id": "learning_18",
+    "category": "Learning Rules",
+    "framework": "Brian2",
+    "prompt": "Write Brian2 code to implement anti-Hebbian plasticity in inhibitory connections.",
+    "semantic_rules": ["Synapses", "on_pre", "w -="]
+  },
+  {
+    "id": "learning_19",
+    "category": "Learning Rules",
+    "framework": "Brian2",
+    "prompt": "Implement voltage-based STDP in Brian2 between 2 groups of neurons.",
+    "semantic_rules": ["Synapses", "on_post", "w +=", "v_post"]
+  },
+  {
+    "id": "learning_20",
+    "category": "Learning Rules",
+    "framework": "Norse",
+    "prompt": "Train a Norse recurrent spiking network with surrogate gradients on random time-series data.",
+    "semantic_rules": ["norse.torch", "LIFRecurrentCell", "loss.backward", "torch.randn"]
+  },
+  {
+    "id": "network_1",
+    "category": "Network Creation",
+    "framework": "Brian2",
+    "prompt": "Construct a Brian2 network with 100 excitatory and 25 inhibitory neurons connected randomly with 10% probability. Run for 500 ms and record population firing rates.",
+    "semantic_rules": ["NeuronGroup", "Synapses", "SpikeMonitor", "run(", "p=0.1", "500*ms"]
+  },
+  {
+    "id": "network_2",
+    "category": "Network Creation",
+    "framework": "snnTorch",
+    "prompt": "Build a spiking CNN in snnTorch with one convolutional LIF layer followed by a fully connected LIF layer. Run random spike input for 50 steps.",
+    "semantic_rules": ["snn.Conv2d", "snn.Leaky", "torch.rand", "nn.Linear"]
+  },
+  {
+    "id": "network_3",
+    "category": "Network Creation",
+    "framework": "Brian2",
+    "prompt": "Write Brian2 code to implement a recurrent network of 20 neurons with random connections. Stimulate with Poisson input and plot spike raster.",
+    "semantic_rules": ["NeuronGroup", "PoissonGroup", "Synapses", "SpikeMonitor", "plot"]
+  },
+  {
+    "id": "network_4",
+    "category": "Network Creation",
+    "framework": "Brian2",
+    "prompt": "Construct a feedforward network of 3 layers (10-20-5) in Brian2 with LIF neurons. Stimulate with Poisson input for 200 ms.",
+    "semantic_rules": ["NeuronGroup", "Synapses", "PoissonGroup", "200*ms"]
+  },
+  {
+    "id": "network_5",
+    "category": "Network Creation",
+    "framework": "Norse",
+    "prompt": "Build a spiking RNN in Norse with 20 hidden LIF units. Feed it a random spike sequence and output spikes.",
+    "semantic_rules": ["norse.torch", "LIFRecurrentCell", "torch.randn", "nn.RNN"]
+  },
+  {
+    "id": "network_6",
+    "category": "Network Creation",
+    "framework": "Brian2",
+    "prompt": "Simulate a small-world spiking network with 50 neurons in Brian2 using the Watts-Strogatz model. Plot degree distribution and spike raster.",
+    "semantic_rules": ["NeuronGroup", "Synapses", "SpikeMonitor", "plot", "networkx"]
+  },
+  {
+    "id": "network_7",
+    "category": "Network Creation",
+    "framework": "snnTorch",
+    "prompt": "Design a two-layer fully connected LIF network in snnTorch (input 100, hidden 50, output 10). Perform one forward pass with dummy spikes.",
+    "semantic_rules": ["snn.Leaky", "torch.rand", "nn.Linear"]
+  },
+  {
+    "id": "network_8",
+    "category": "Network Creation",
+    "framework": "Brian2",
+    "prompt": "Implement a Brian2 model of a balanced random network with 200 excitatory and 50 inhibitory neurons. Simulate 1 second of activity.",
+    "semantic_rules": ["NeuronGroup", "Synapses", "SpikeMonitor", "1*second"]
+  },
+  {
+    "id": "network_9",
+    "category": "Network Creation",
+    "framework": "Brian2",
+    "prompt": "Construct a three-layer convolutional SNN in Brian2 for 1D input with 16, 32, and 10 neurons per layer. Drive with Poisson input.",
+    "semantic_rules": ["NeuronGroup", "Synapses", "PoissonGroup"]
+  },
+  {
+    "id": "network_10",
+    "category": "Network Creation",
+    "framework": "Norse",
+    "prompt": "Build a simple Norse-based feedforward spiking network with 2 hidden LIF layers. Simulate 50 steps with random input.",
+    "semantic_rules": ["norse.torch", "LIFCell", "nn.Linear", "range(50)"]
+  },
+  {
+    "id": "network_11",
+    "category": "Network Creation",
+    "framework": "Brian2",
+    "prompt": "Create a Brian2 model with 3 neuron populations (excitatory, inhibitory, Poisson input). Connect with different probabilities and simulate activity.",
+    "semantic_rules": ["NeuronGroup", "PoissonGroup", "Synapses", "p="]
+  },
+  {
+    "id": "network_12",
+    "category": "Network Creation",
+    "framework": "snnTorch",
+    "prompt": "Implement a spiking autoencoder with snnTorch using two LIF layers. Run one forward and backward pass on random binary input.",
+    "semantic_rules": ["snn.Leaky", "loss.backward", "nn.Linear"]
+  },
+  {
+    "id": "network_13",
+    "category": "Network Creation",
+    "framework": "Brian2",
+    "prompt": "Design a feedforward Brian2 network with three populations (input 50, hidden 20, output 10). Connect layers with fixed weights and run 200 ms.",
+    "semantic_rules": ["NeuronGroup", "Synapses", "200*ms"]
+  },
+  {
+    "id": "network_14",
+    "category": "Network Creation",
+    "framework": "Brian2",
+    "prompt": "Write Brian2 code for a randomly connected spiking reservoir of 100 neurons. Drive with input current and record spike trains.",
+    "semantic_rules": ["NeuronGroup", "Synapses", "SpikeMonitor", "TimedArray"]
+  },
+  {
+    "id": "network_15",
+    "category": "Network Creation",
+    "framework": "Norse",
+    "prompt": "Build a Norse recurrent network for temporal classification with 30 hidden neurons. Provide random input and print spikes.",
+    "semantic_rules": ["norse.torch", "LIFRecurrentCell", "torch.randn", "nn.Linear"]
+  },
+  {
+    "id": "network_16",
+    "category": "Network Creation",
+    "framework": "Brian2",
+    "prompt": "Simulate two connected populations (excitatory and inhibitory) in Brian2 with STDP on excitatory connections. Plot firing rates.",
+    "semantic_rules": ["NeuronGroup", "Synapses", "on_pre", "on_post", "plot"]
+  },
+  {
+    "id": "network_17",
+    "category": "Network Creation",
+    "framework": "snnTorch",
+    "prompt": "Design a snnTorch spiking MLP with three layers (100-50-10 LIF neurons). Perform one forward pass with dummy data.",
+    "semantic_rules": ["snn.Leaky", "torch.rand", "nn.Linear"]
+  },
+  {
+    "id": "network_18",
+    "category": "Network Creation",
+    "framework": "Brian2",
+    "prompt": "Create a Brian2 model of a ring network with 10 neurons, each connected to its two neighbors. Simulate and plot spikes.",
+    "semantic_rules": ["NeuronGroup", "Synapses", "SpikeMonitor", "plot"]
+  },
+  {
+    "id": "network_19",
+    "category": "Network Creation",
+    "framework": "Brian2",
+    "prompt": "Implement a modular network in Brian2 with two clusters of neurons. Connect with high intra-cluster and low inter-cluster probability.",
+    "semantic_rules": ["NeuronGroup", "Synapses", "p="]
+  },
+  {
+    "id": "network_20",
+    "category": "Network Creation",
+    "framework": "Norse",
+    "prompt": "Write Norse code to simulate a hierarchical spiking network with two LIF layers of different sizes. Run random input spikes for 40 steps.",
+    "semantic_rules": ["norse.torch", "LIFCell", "torch.randn", "range(40)"]
+  },
+  {
+    "id": "opt_2",
+    "category": "Code Optimization / Translation",
+    "framework": "snnTorch",
+    "prompt": "Translate a custom PyTorch LIF neuron into snnTorch LIF module.",
+    "semantic_rules": ["snn.Leaky", "nn.Module", "forward"]
+  },
+  {
+    "id": "opt_3",
+    "category": "Code Optimization / Translation",
+    "framework": "Brian2",
+    "prompt": "Optimize Brian2 code that repeatedly resets neuron states using explicit loops. Use vectorized reset instead.",
+    "semantic_rules": ["NeuronGroup", "v[:] =", "np."]
+  },
+  {
+    "id": "opt_4",
+    "category": "Code Optimization / Translation",
+    "framework": "Norse",
+    "prompt": "Translate a PyTorch RNN with tanh units into a Norse spiking recurrent network with LIF neurons.",
+    "semantic_rules": ["norse.torch", "LIFRecurrentCell", "nn.RNN"]
+  },
+  {
+    "id": "opt_5",
+    "category": "Code Optimization / Translation",
+    "framework": "Brian2",
+    "prompt": "Improve memory usage of a Brian2 simulation with 5000 neurons by avoiding unnecessary StateMonitor variables.",
+    "semantic_rules": ["NeuronGroup", "StateMonitor", "record=False"]
+  },
+  {
+    "id": "opt_6",
+    "category": "Code Optimization / Translation",
+    "framework": "snnTorch",
+    "prompt": "Convert a PyTorch ANN with ReLU activations into an equivalent snnTorch LIF-based SNN.",
+    "semantic_rules": ["snn.Leaky", "nn.ReLU", "nn.Linear"]
+  },
+  {
+    "id": "opt_7",
+    "category": "Code Optimization / Translation",
+    "framework": "Brian2",
+    "prompt": "Optimize STDP implementation in Brian2 by replacing event-driven loops with built-in 'on_pre' and 'on_post' statements.",
+    "semantic_rules": ["Synapses", "on_pre", "on_post", "w +="]
+  },
+  {
+    "id": "opt_8",
+    "category": "Code Optimization / Translation",
+    "framework": "Norse",
+    "prompt": "Translate a PyTorch CNN into Norse by replacing linear activations with LIF layers. Use random input for testing.",
+    "semantic_rules": ["norse.torch", "LIFCell", "nn.Conv2d"]
+  },
+  {
+    "id": "opt_9",
+    "category": "Code Optimization / Translation",
+    "framework": "Brian2",
+    "prompt": "Rewrite inefficient nested loops for synapse updates into vectorized operations in Brian2.",
+    "semantic_rules": ["Synapses", "w[:] =", "np."]
+  },
+  {
+    "id": "opt_10",
+    "category": "Code Optimization / Translation",
+    "framework": "snnTorch",
+    "prompt": "Replace manual time-step iteration in PyTorch code with snnTorch Sequential API for spiking layers.",
+    "semantic_rules": ["snn.Sequential", "nn.Sequential"]
+  },
+  {
+    "id": "opt_11",
+    "category": "Code Optimization / Translation",
+    "framework": "Brian2",
+    "prompt": "Reduce computational load in Brian2 by using sparse synaptic matrices for large random networks.",
+    "semantic_rules": ["Synapses", "sparse=True", "scipy.sparse"]
+  },
+  {
+    "id": "opt_12",
+    "category": "Code Optimization / Translation",
+    "framework": "Norse",
+    "prompt": "Translate a PyTorch autoencoder with sigmoid units into a spiking autoencoder in Norse using LIF neurons.",
+    "semantic_rules": ["norse.torch", "LIFCell", "nn.Sigmoid"]
+  },
+  {
+    "id": "opt_13",
+    "category": "Code Optimization / Translation",
+    "framework": "Brian2",
+    "prompt": "Optimize code that recalculates identical neuron parameters each time step. Precompute constants outside loop.",
+    "semantic_rules": ["NeuronGroup", "Equations", "constant"]
+  },
+  {
+    "id": "opt_14",
+    "category": "Code Optimization / Translation",
+    "framework": "snnTorch",
+    "prompt": "Convert a PyTorch GRU model into an SNN equivalent using snnTorch LIF recurrent layers.",
+    "semantic_rules": ["snn.RLeaky", "nn.GRU"]
+  },
+  {
+    "id": "opt_15",
+    "category": "Code Optimization / Translation",
+    "framework": "Brian2",
+    "prompt": "Refactor Brian2 network creation code to avoid creating and deleting neuron groups repeatedly. Reuse defined groups.",
+    "semantic_rules": ["NeuronGroup", "Synapses", "clear()"]
+  },
+  {
+    "id": "opt_16",
+    "category": "Code Optimization / Translation",
+    "framework": "Norse",
+    "prompt": "Translate a PyTorch MLP classifier into a spiking network in Norse with surrogate gradient training.",
+    "semantic_rules": ["norse.torch", "LIFCell", "nn.Linear", "loss.backward"]
+  },
+  {
+    "id": "opt_17",
+    "category": "Code Optimization / Translation",
+    "framework": "Brian2",
+    "prompt": "Use Brian2 'run_regularly' to replace explicit Python loops that update neuron states every time step.",
+    "semantic_rules": ["run_regularly", "NeuronGroup"]
+  },
+  {
+    "id": "opt_18",
+    "category": "Code Optimization / Translation",
+    "framework": "snnTorch",
+    "prompt": "Optimize snnTorch code by using batched spike inputs instead of processing each sample sequentially.",
+    "semantic_rules": ["torch.rand", "batch_size,"]
+  },
+  {
+    "id": "opt_19",
+    "category": "Code Optimization / Translation",
+    "framework": "Brian2",
+    "prompt": "Replace inefficient Python-based spike logging with Brian2 built-in SpikeMonitor.",
+    "semantic_rules": ["SpikeMonitor", "spikes"]
+  },
+  {
+    "id": "opt_20",
+    "category": "Code Optimization / Translation",
+    "framework": "Norse",
+    "prompt": "Translate a TensorFlow LIF implementation into Norse. Provide random inputs to test correctness.",
+    "semantic_rules": ["norse.torch", "LIFCell", "torch.randn"]
+  }
+]
