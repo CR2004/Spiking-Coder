@@ -103,7 +103,7 @@ def main():
         
         print(f"\nProcessing snippet {i + 1}/{total_snippets}")
         
-        # Skip very long code snippets (likely to cause issues)
+        # Skip very long code snippets 
         if len(code) > 10000:
             print(f"  Skipping - code too long ({len(code)} chars)")
             continue
@@ -138,10 +138,6 @@ def main():
     
     print(f"\nComplete! Saved {len(results)} problem statements to {OUTPUT_FILE}")
     
-    # Clean up checkpoint file
-    if os.path.exists(CHECKPOINT_FILE):
-        os.remove(CHECKPOINT_FILE)
-        print("Checkpoint file cleaned up")
 
 if __name__ == "__main__":
     main()
